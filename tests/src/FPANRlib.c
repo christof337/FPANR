@@ -95,17 +95,17 @@ void float_st::SetPrec(int prec){
 }
 
 */
-void f_setPrec(float_st this, int prec) {
+void f_setPrec(float_st * this, int prec) {
 	//LOG("");
 	union ieee754_float d;
-	d.f = this._value;
+	d.f = this->_value;
 
 	prec = MIN(22,prec);
 
 	d.ieee.mantissa &= (0x7FFFFF<<(23-prec));
 	d.ieee.mantissa |= 1<<(22-prec); // set the leading 1
 
-	this._value = d.f;
+	this->_value = d.f;
 }
 
 /*
@@ -133,28 +133,28 @@ void double_st::SetPrec(int prec){
 }
 
 */
-void d_setPrec(double_st this, int prec) {
+void d_setPrec(double_st * this, int prec) {
 	printf("\t setPrec");
 	//LOG("");
 	union ieee754_double d;
-	d.d = this._value;
+	d.d = this->_value;
 
 	prec = MIN(51,prec);
 
-	if(prec<20) {
+	if (prec<20){
 		d.ieee.mantissa0 &= (0xFFFFFu<<(20-prec));
 		d.ieee.mantissa0 |= 1<<(19-prec); // set the leading 1
 		d.ieee.mantissa1 = 0;
-	} else {
-		if (prec == 20) {
-			// cannot shift a number by 32 bits, so do it manually
+	}else{
+		if (prec == 20){
+			// cannot shift a number by 32 bit, so do it manually
 			d.ieee.mantissa1 = 0x80000000;
-		} else {
+		}else{
 			d.ieee.mantissa1 &= (0xFFFFFFFF<<(32-(prec-20)));
 			d.ieee.mantissa1 |= 1<<(31-(prec-20)); // set the leading 1
 		}
 	}
-	this._value = d.d;
+	this->_value = d.d;
 }
 
 /*
@@ -162,7 +162,7 @@ void   double_st::SetPrecMax(){
 	//LOG("");
 	SetPrec(51);
 } */
-void   d_setPrecMax(double_st this) {
+void   d_setPrecMax(double_st * this) {
 	printf("\t setPrecMax");
 	//LOG("");
 	d_setPrec(this,51);
@@ -176,7 +176,7 @@ void   float_st::SetPrecMax(){
 	SetPrec(22);
 }*/
 
-void   f_setPrecMax(float_st this) {
+void   f_setPrecMax(float_st * this) {
 	//LOG("");
 	f_setPrec(this,22);
 }
@@ -203,7 +203,7 @@ unsigned   double_st::GetPrec() const{
 }
 */
 
-unsigned   d_getPrec(double_st this) {
+unsigned d_getPrec(double_st this) {
 	printf("\t getPrec");
 	union ieee754_double d;
 	unsigned c;
@@ -283,7 +283,7 @@ double   double_st::GetVal(int *prec) const{
 	return(d.d);
 } */
 
-double   d_getVal(double_st this, int *prec) {
+double d_getVal(const double_st this, int *prec) {
 	printf("\t getVal");
 	union ieee754_double d;
 	int c;
@@ -370,7 +370,7 @@ float   f_getVal(float_st this, int *prec) {
 	res->_value = f_getVal(a,&p1) + f_getVal(b,&p2);
 
 	frexp(res->_value, &er);
-	f_setPrec(*res, er - MAX((e1-p1) , (e2-p2)));
+	f_setPrec(res, er - MAX((e1-p1) , (e2-p2)));
 
 	//return *this;
 }
@@ -386,7 +386,8 @@ float   f_getVal(float_st this, int *prec) {
 	res->_value = d_getVal(a, &p1) + d_getVal(b, &p2);
 
 	frexp(res->_value, &er);
-	d_setPrec(*res,er - MAX((e1-p1) , (e2-p2)));
+	d_setPrec(res,er - MAX((e1-p1) , (e2-p2)));
+	printf("\n**********%d",er - MAX((e1-p1) , (e2-p2)));
 
 //    return *this;
 }
@@ -403,7 +404,7 @@ float   f_getVal(float_st this, int *prec) {
 	res->_value = f_getVal(a, &p1) - f_getVal(b, &p2);
 
 	frexp(res->_value, &er);
-	f_setPrec(*res,er - MAX((e1-p1) , (e2-p2)));
+	f_setPrec(res,er - MAX((e1-p1) , (e2-p2)));
 
 //    return *this;
 }
@@ -419,7 +420,7 @@ float   f_getVal(float_st this, int *prec) {
 	res->_value = d_getVal(a, &p1) - d_getVal(b, &p2);
 
 	frexp(res->_value, &er);
-	d_setPrec(*res,er - MAX((e1-p1) , (e2-p2)));
+	d_setPrec(res,er - MAX((e1-p1) , (e2-p2)));
 
 //    return *this;
 }
@@ -468,7 +469,7 @@ float   f_getVal(float_st this, int *prec) {
 
 	res->_value = f_getVal(a, &p1) * f_getVal(b, &p2);
 
-	f_setPrec(*res,MIN(p1,p2));
+	f_setPrec(res,MIN(p1,p2));
 
 //    return *this;
 }
@@ -480,7 +481,7 @@ float   f_getVal(float_st this, int *prec) {
 
 	res->_value = d_getVal(a, &p1) * d_getVal(b, &p2);
 
-	d_setPrec(*res,MIN(p1,p2));
+	d_setPrec(res,MIN(p1,p2));
 
 //    return *this;
 }
@@ -515,7 +516,7 @@ float   f_getVal(float_st this, int *prec) {
 
 	res->_value = f_getVal(a, &p1) / f_getVal(b, &p2);
 
-	f_setPrec(*res,MIN(p1,p2));
+	f_setPrec(res,MIN(p1,p2));
 
 //    return *this;
 }
@@ -527,7 +528,7 @@ float   f_getVal(float_st this, int *prec) {
 
 	res->_value = d_getVal(a, &p1) / d_getVal(b, &p2);
 
-	d_setPrec(*res,MIN(p1,p2));
+	d_setPrec(res,MIN(p1,p2));
 
 //    return *this;
 }

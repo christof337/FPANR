@@ -23,46 +23,131 @@
 #include <check.h>
 #include "../src/FPANRlib.h"
 
+#define MAX(A,B) (((A)>(B)) ? (A) : (B))
+#define MIN(A,B) (((A)<(B)) ? (A) : (B))
+
 START_TEST(test_fpanr_d_add)
 {
-    double_st a,b,res;
-    double _a=0.1,_b=0.5;
+    double_st a,b,res, expected1, expected2;
+    double _a,_b;
+	double currentA, currentB, currentRes;
+    int aPrec, bPrec, rPrec;
+	int rExp, aExp, bExp;
+
+    // initializations
+    _a=1.1;
+    _b=2.643;
 
     a._value = _a;
-	d_setPrecMax(a);
     b._value = _b;
-	d_setPrecMax(b);
 
+	d_setPrecMax(&a);
+	d_setPrecMax(&b);
+
+//	d_setPrec(&a,34);
+//	d_setPrec(&b,43);
+
+	// retrieve needed values for a and b
+	aPrec = d_getPrec(a);
+	bPrec = d_getPrec(b);
+	currentA = d_getVal(a,&aPrec);
+	currentB = d_getVal(b,&bPrec);
+	frexp(currentA, &aExp);
+	frexp(currentB, &bExp);
+
+	// setting expected values
+	expected1._value = currentA+currentB;
+	expected2._value = _a+_b;
+
+	// --------------------
+	// tested function call
+	// --------------------
 	d_add(&res,a,b);
-	int rPrec = d_getPrec(res);
-	int aPrec = d_getPrec(a);
-	int bPrec = d_getPrec(b);
 
-	ck_assert(a._value==_a);
-	ck_assert(b._value==_b);
-	ck_assert(res._value==_a+_b);
-//	ck_assert(d_getVal(res,&rPrec)==(d_getVal(a,&aPrec)+d_getVal(b,&bPrec)));
-//	printf("\n\n%f=%f+%f(%f)\n\n",d_getVal(res,&rPrec),d_getVal(a,&aPrec),d_getVal(b,&bPrec),d_getVal(a,&aPrec)+d_getVal(b,&bPrec));
+	// getting needed values
+	rPrec = d_getPrec(res);
+	currentRes = d_getVal(res,&rPrec);
+	frexp(currentRes, &rExp);
+	d_setPrec(&expected1,rPrec);
+	d_setPrec(&expected2,rPrec);
+
+	// precision test
+	ck_assert_int_eq(rPrec,rExp-MAX((aExp-aPrec),(bExp-bPrec)));
+	// numerical value test
+	ck_assert(d_getVal(expected1,&rPrec)==currentRes);
+	ck_assert(d_getVal(expected2,&rPrec)==currentRes);
+}
+END_TEST
+
+START_TEST(test_fpanr_d_sub)
+{
+	double_st a,b,res, expected1, expected2;
+	double _a,_b;
+	double currentA, currentB, currentRes;
+	int aPrec, bPrec, rPrec;
+	int rExp, aExp, bExp;
+
+	// initializations
+	_a=1.1;
+	_b=2.643;
+
+	a._value = _a;
+	b._value = _b;
+
+	d_setPrecMax(&a);
+	d_setPrecMax(&b);
+
+	// retrieve needed values for a and b
+	aPrec = d_getPrec(a);
+	bPrec = d_getPrec(b);
+	currentA = d_getVal(a,&aPrec);
+	currentB = d_getVal(b,&bPrec);
+	frexp(currentA, &aExp);
+	frexp(currentB, &bExp);
+
+	// setting expected values
+	expected1._value = currentA-currentB;
+	expected2._value = _a-_b;
+
+	// --------------------
+	// tested function call
+	// --------------------
+	d_sub(&res,a,b);
+
+	// getting needed values
+	rPrec = d_getPrec(res);
+	currentRes = d_getVal(res,&rPrec);
+	frexp(currentRes, &rExp);
+	d_setPrec(&expected1,rPrec);
+	d_setPrec(&expected2,rPrec);
+
+	// precision test
+	ck_assert_int_eq(rPrec,rExp-MAX((aExp-aPrec),(bExp-bPrec)));
+	// numerical value test
+	ck_assert(d_getVal(expected1,&rPrec)==currentRes);
+	ck_assert(d_getVal(expected2,&rPrec)==currentRes);
 }
 END_TEST
 
 Suite * fpanr_suite(void)
 {
     Suite *s;
-    TCase *tc_core;
+    TCase *tc_core_add,*tc_core_sub;
     TCase *tc_limits;
 
     s = suite_create("FPANR");
 
     /* Core test case */
-    tc_core = tcase_create("Core_add");
-
-    tcase_add_test(tc_core, test_fpanr_d_add);
-    suite_add_tcase(s, tc_core);
+    tc_core_add = tcase_create("Core_add");
+    tcase_add_test(tc_core_add, test_fpanr_d_add);
+    tc_core_sub = tcase_create("Core_sub");
+    tcase_add_test(tc_core_sub, test_fpanr_d_sub);
+    suite_add_tcase(s, tc_core_add);
+    suite_add_tcase(s, tc_core_sub);
 
     /* Limits test case */
 //    tc_limits = tcase_create("Limits");
-//
+//tc_core
 //    tcase_add_test(tc_limits, test_money_create_neg);
 //    tcase_add_test(tc_limits, test_money_create_zero);
 //    suite_add_tcase(s, tc_limits);
