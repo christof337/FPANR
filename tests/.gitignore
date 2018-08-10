@@ -1,0 +1,49 @@
+# extensions
+*.o 
+*.lo 
+*.la 
+*.in 
+*/*.o 
+*/*.lo 
+*/*.la
+
+# exe files
+src/main
+tests/check_fpanr 
+
+# generated makefiles
+Makefile
+src/Makefile
+tests/Makefile
+
+# dirs 
+autom4te.cache
+src/.deps 
+src/.libs
+tests/.deps 
+tests/.libs
+
+# various files 
+.cproject 
+.project 
+aclocal.m4
+config.h
+config.log
+config.status
+configure
+install-sh
+missing
+ar-lib 
+compile 
+config.guess 
+config.h.in 
+config.sub 
+depcomp
+libtool
+ltmain.sh
+stamp-h1 
+test-driver  
+tests/check_fpanr.trs
+tests/check_fpanr.log
+tests/test-suite.log
+
