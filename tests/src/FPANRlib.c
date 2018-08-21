@@ -40,16 +40,12 @@
 
 #include "ieee754.h"
 
+#include "FPANRlib.h"
+
 #define MAX(A,B) (((A)>(B)) ? (A) : (B))
 #define MIN(A,B) (((A)<(B)) ? (A) : (B))
 
-typedef struct {
-	double _value;
-}double_st;
-
-typedef struct {
-	float _value;
-}float_st;
+#define DEBUG 0
 
 // --------------------------------------
 
@@ -74,7 +70,9 @@ typedef struct {
 
   unsigned count_trailing_zeros(unsigned long n) {
 	//LOG("");
+#if DEBUG
 	printf("\t count_trailing_zeros");
+#endif
 	return __builtin_ctzll(n);
 }
 
@@ -134,7 +132,9 @@ void double_st::SetPrec(int prec){
 
 */
 void d_setPrec(double_st * this, int prec) {
+#if DEBUG
 	printf("\t setPrec");
+#endif
 	//LOG("");
 	union ieee754_double d;
 	d.d = this->_value;
@@ -162,8 +162,10 @@ void   double_st::SetPrecMax(){
 	//LOG("");
 	SetPrec(51);
 } */
-void   d_setPrecMax(double_st * this) {
+void d_setPrecMax(double_st * this) {
+#if DEBUG
 	printf("\t setPrecMax");
+#endif
 	//LOG("");
 	d_setPrec(this,51);
 }
@@ -176,7 +178,7 @@ void   float_st::SetPrecMax(){
 	SetPrec(22);
 }*/
 
-void   f_setPrecMax(float_st * this) {
+void f_setPrecMax(float_st * this) {
 	//LOG("");
 	f_setPrec(this,22);
 }
@@ -204,7 +206,9 @@ unsigned   double_st::GetPrec() const{
 */
 
 unsigned d_getPrec(double_st this) {
+#if DEBUG
 	printf("\t getPrec");
+#endif
 	union ieee754_double d;
 	unsigned c;
 
@@ -243,7 +247,7 @@ unsigned   float_st::GetPrec() const{
 }
 */
 
-unsigned   f_getPrec(float_st this) {
+unsigned f_getPrec(float_st this) {
 	union ieee754_float d;
 	unsigned c;
 
@@ -284,7 +288,9 @@ double   double_st::GetVal(int *prec) const{
 } */
 
 double d_getVal(const double_st this, int *prec) {
+#if DEBUG
 	printf("\t getVal");
+#endif
 	union ieee754_double d;
 	int c;
 
@@ -325,7 +331,7 @@ float   float_st::GetVal(int *prec) const{
 }
 */
 
-float   f_getVal(float_st this, int *prec) {
+float f_getVal(float_st this, int *prec) {
 	union ieee754_float d;
 	int c;
 
@@ -338,6 +344,15 @@ float   f_getVal(float_st this, int *prec) {
 
 	*prec = 22-c;
 	return (d.f);
+}
+
+
+void f_set(float_st * dest, const float_st source) {
+	dest->_value = source._value;
+}
+
+void d_set(double_st * dest, const double_st source) {
+	dest->_value = source._value;
 }
 
 
@@ -359,9 +374,11 @@ float   f_getVal(float_st this, int *prec) {
     return *this;
 }*/
 
-  void f_add(float_st * res, const float_st a, const float_st b) {
+void f_add(float_st * res, const float_st a, const float_st b) {
 	// LOG("")
+#if DEBUG
 	printf("\t f_add");
+#endif
 	int e1, e2, er;
 	int p1, p2;
 
@@ -375,9 +392,11 @@ float   f_getVal(float_st this, int *prec) {
 	//return *this;
 }
 
-  void d_add(double_st * res, const double_st a, const double_st b){
+void d_add(double_st * res, const double_st a, const double_st b){
 	//LOG("");
+#if DEBUG
 	printf("\t d_add");
+#endif
 	int e1, e2, er;
 	int p1, p2;
 
@@ -387,15 +406,17 @@ float   f_getVal(float_st this, int *prec) {
 
 	frexp(res->_value, &er);
 	d_setPrec(res,er - MAX((e1-p1) , (e2-p2)));
-	printf("\n**********%d",er - MAX((e1-p1) , (e2-p2)));
+//	printf("\n**********%d",er - MAX((e1-p1) , (e2-p2)));
 
 //    return *this;
 }
 
 
-  void f_sub(float_st * res, const float_st a, const float_st b){
+void f_sub(float_st * res, const float_st a, const float_st b){
 //	//LOG("");
+#if DEBUG
 	printf("\t f_sub");
+#endif
 	int e1, e2, er;
 	int p1, p2;
 
@@ -409,9 +430,11 @@ float   f_getVal(float_st this, int *prec) {
 //    return *this;
 }
 
-  void d_sub(double_st * res, const double_st a, const double_st b){
+void d_sub(double_st * res, const double_st a, const double_st b){
 //	//LOG("");
+#if DEBUG
 	printf("\t d_sub");
+#endif
 	int e1, e2, er;
 	int p1, p2;
 
@@ -462,9 +485,11 @@ float   f_getVal(float_st this, int *prec) {
 }
 
 */
-  void f_mul(float_st * res, const float_st a, const float_st b){
+void f_mul(float_st * res, const float_st a, const float_st b){
 //	//LOG("");
+#if DEBUG
 	printf("\t f_mul");
+#endif
 	int p1, p2;
 
 	res->_value = f_getVal(a, &p1) * f_getVal(b, &p2);
@@ -474,9 +499,11 @@ float   f_getVal(float_st this, int *prec) {
 //    return *this;
 }
 
-  void d_mul(double_st * res, const double_st a, const double_st b){
+void d_mul(double_st * res, const double_st a, const double_st b){
 //	//LOG("");
+#if DEBUG
 	printf("\t d_mul");
+#endif
 	int p1, p2;
 
 	res->_value = d_getVal(a, &p1) * d_getVal(b, &p2);
@@ -509,9 +536,11 @@ float   f_getVal(float_st this, int *prec) {
 
 */
 
-  void f_div(float_st * res, const float_st a, const float_st b){
+void f_div(float_st * res, const float_st a, const float_st b){
 //	//LOG("");
+#if DEBUG
 	printf("\t f_div");
+#endif
 	int p1, p2;
 
 	res->_value = f_getVal(a, &p1) / f_getVal(b, &p2);
@@ -521,9 +550,11 @@ float   f_getVal(float_st this, int *prec) {
 //    return *this;
 }
 
-  void d_div(double_st * res, const double_st a, const double_st b){
+void d_div(double_st * res, const double_st a, const double_st b){
 //	//LOG("");
+#if DEBUG
 	printf("\t d_div");
+#endif
 	int p1, p2;
 
 	res->_value = d_getVal(a, &p1) / d_getVal(b, &p2);
@@ -555,6 +586,31 @@ float   f_getVal(float_st this, int *prec) {
 }
 */
 
+
+ void f_abs(float_st * res, const float_st a) {
+	 int p;
+	 res->_value = abs(f_getVal(a,&p));
+	 f_setPrec(res, p);
+ }
+
+ void d_abs(double_st * res, const double_st a) {
+	 int p;
+	 res->_value = abs(d_getVal(a,&p));
+	 d_setPrec(res, p);
+ }
+
+ void f_fabs(float_st * res, const float_st a) {
+	 int p;
+	 res->_value = fabs(f_getVal(a,&p));
+	 f_setPrec(res, p);
+ }
+
+ void d_fabs(double_st * res, const double_st a) {
+	 int p;
+	 res->_value = fabs(d_getVal(a,&p));
+	 d_setPrec(res, p);
+ }
+
 /************************* FPHOOKS FUNCTIONS *************************
 * These functions correspond to those inserted into the source code
 * during source to source compilation and are replacement to floating
@@ -563,7 +619,9 @@ float   f_getVal(float_st this, int *prec) {
 
 static float _floatadd(float _a, float _b) {
 	//return a + b
+#if DEBUG
 	printf("\n_float_add");
+#endif
 	float_st res,a,b;
 	a._value=_a;
 	b._value=_b;
@@ -574,7 +632,9 @@ static float _floatadd(float _a, float _b) {
 }
 
 static float _floatsub(float _a, float _b) {
+#if DEBUG
 	printf("\n_float_sub");
+#endif
 	//return a - b
 	float_st res,a,b;
 	a._value=_a;
@@ -586,7 +646,9 @@ static float _floatsub(float _a, float _b) {
 }
 
 static float _floatmul(float _a, float _b) {
+#if DEBUG
 	printf("\n_float_mul");
+#endif
 	//return a * b
 	float_st res,a,b;
 	a._value=_a;
@@ -598,7 +660,9 @@ static float _floatmul(float _a, float _b) {
 }
 
 static float _floatdiv(float _a, float _b) {
+#if DEBUG
 	printf("\n_float_div");
+#endif
 	//return a / b
 	float_st res,a,b;
 	a._value=_a;
@@ -611,7 +675,9 @@ static float _floatdiv(float _a, float _b) {
 
 
 static double _doubleadd(double _a, double _b) {
+#if DEBUG
 	printf("\n_double_add");
+#endif
 	//return a + b
 	double_st res,a,b;
 	a._value=_a;
@@ -623,7 +689,9 @@ static double _doubleadd(double _a, double _b) {
 }
 
 static double _doublesub(double _a, double _b) {
+#if DEBUG
 	printf("\n_double_sub");
+#endif
 	//return a - b
 	double_st res,a,b;
 	a._value=_a;
@@ -635,21 +703,29 @@ static double _doublesub(double _a, double _b) {
 }
 
 static double _doublemul(double _a, double _b) {
+#if DEBUG
 	printf("\n_double_mul");
+#endif
 	//return a * b
 	double_st res,a,b;
+	a._value=_a;
+	b._value=_b;
 	d_mul(&res,a,b);
 	int prec = d_getPrec(res);
-	return d_getPrec(res);
+	return d_getVal(res,&prec);
 //	return _mca_dbin(a, b, (mpfr_bin)MP_MUL);
 }
 
 static double _doublediv(double _a, double _b) {
+#if DEBUG
 	printf("\n_double_div");
+#endif
 	//return a / b
 	double_st res,a,b;
+	a._value=_a;
+	b._value=_b;
 	d_div(&res,a,b);
 	int prec = d_getPrec(res);
-	return d_getPrec(res);
+	return d_getVal(res,&prec);
 	//return _mca_dbin(a, b, (mpfr_bin)MP_DIV);
 }
