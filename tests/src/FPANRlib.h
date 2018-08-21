@@ -31,10 +31,12 @@ void f_div(float_st * res, const float_st a, const float_st b);
 void d_div(double_st * res, const double_st a, const double_st b);
 
  // unary
-void f_abs(float_st * res, const float_st a);
-void d_abs(double_st * res, const double_st a);
+//void f_abs(float_st * res, const float_st a);
+//void d_abs(double_st * res, const double_st a);
 void f_fabs(float_st * res, const float_st a);
 void d_fabs(double_st * res, const double_st a);
+void f_sqrt(float_st * res, const float_st a);
+void d_sqrt(double_st * res, const double_st a);
 
 /************************* FPHOOKS FUNCTIONS *************************
 * These functions correspond to those inserted into the source code

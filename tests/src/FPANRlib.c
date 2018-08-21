@@ -587,17 +587,17 @@ void d_div(double_st * res, const double_st a, const double_st b){
 */
 
 
- void f_abs(float_st * res, const float_st a) {
-	 int p;
-	 res->_value = abs(f_getVal(a,&p));
-	 f_setPrec(res, p);
- }
-
- void d_abs(double_st * res, const double_st a) {
-	 int p;
-	 res->_value = abs(d_getVal(a,&p));
-	 d_setPrec(res, p);
- }
+// void f_abs(float_st * res, const float_st a) {
+//	 int p;
+//	 res->_value = abs(f_getVal(a,&p));
+//	 f_setPrec(res, p);
+// }
+//
+// void d_abs(double_st * res, const double_st a) {
+//	 int p;
+//	 res->_value = abs(d_getVal(a,&p));
+//	 d_setPrec(res, p);
+// }
 
  void f_fabs(float_st * res, const float_st a) {
 	 int p;
@@ -609,6 +609,18 @@ void d_div(double_st * res, const double_st a, const double_st b){
 	 int p;
 	 res->_value = fabs(d_getVal(a,&p));
 	 d_setPrec(res, p);
+ }
+
+ void f_sqrt(float_st * res, const float_st a) {
+	 int p;
+	 res->_value = sqrt(f_getVal(a,&p));
+	 f_setPrec(res, p+1);
+ }
+
+ void d_sqrt(double_st * res, const double_st a) {
+	 int p;
+	 res->_value = sqrt(d_getVal(a,&p));
+	 d_setPrec(res, p+1);
  }
 
 /************************* FPHOOKS FUNCTIONS *************************

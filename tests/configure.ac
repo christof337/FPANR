@@ -3,7 +3,7 @@
 # Prelude.
 AC_PREREQ([2.59])
 #AC_INIT([Money], [0.3], [check-devel AT lists.sourceforge.net])
-AC_INIT([FPANRtests],[0.2])
+AC_INIT([FPANRtests],[0.3])
 AM_PROG_AR
 
 # unique source file --- primitive safety check 
