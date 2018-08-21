@@ -9,6 +9,7 @@ AM_PROG_AR
 # unique source file --- primitive safety check 
 # AC_CONFIG_SRCDIR([src/FPANRlib.c])
 AC_CONFIG_SRCDIR([src])
+AC_CONFIG_SRCDIR([examples])
 AC_CONFIG_MACRO_DIRS([m4])
 
 # fairly severe build strictness
@@ -46,6 +47,7 @@ AC_CONFIG_HEADERS([config.h])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile
-                 tests/Makefile])
+                 tests/Makefile
+                 examples/Makefile])
 
 AC_OUTPUT
