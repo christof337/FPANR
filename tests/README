@@ -1,3 +1,1 @@
-# Compiling
-```autoreconf -im
-make check```
+README.md
