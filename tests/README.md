@@ -36,7 +36,7 @@ make check
 
 ## Contributing
 
-Please send me an email at christophe.pont@univ-perp.Fr if you wish yo contribute
+Please send me an email at christophe.pont@univ-perp.Fr if you wish to contribute
 
 ## Authors
 * **David Defour** - *Concept and complete scientific work*
