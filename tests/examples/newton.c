@@ -13,12 +13,12 @@ double df(double z)
 {
 //	printf("z=%e, %f",z,z);
 //	getchar();
-	double x = z;
-	double y = 1.0;
+//	double x = z;
+//	double y = 1.0;
 //	printf("\nx=%e",x);
-	x = z - y;
+//	x = z - y;
 //	printf("\nx=%e",x);
-	x = x * 2.0;
+//	x = x * 2.0;
 //	printf("\nx=%e",x);
 	return 2.0*(z-1.0);
 }
@@ -26,6 +26,7 @@ double df(double z)
 double newton(double x0,double eps)
 {
 	int i=0;
+	// x=x0-f(x0)/df(x0);
 //	printf("\nstep 1\n");
 	double x = df(x0);
 //	printf("f(x0)=%e,df(x0)=%e\n",f(x0),x);
