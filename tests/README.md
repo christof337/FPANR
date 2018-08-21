@@ -51,7 +51,7 @@ This project is licensed under GPL - see the [LICENSE.md](../LICENSE.md) file fo
 ## Acknowledgments
 
 * Thanks to check documentation
-* THanks to autotools configuration made accessible
+* Thanks to autotools configuration made accessible
 * All the design goes to David Defour
 
 
