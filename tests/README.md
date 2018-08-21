@@ -1,3 +1,6 @@
 # Compiling
-```autoreconf -im
-make check```
+```
+autoreconf -i
+make
+make check
+```
