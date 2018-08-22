@@ -623,6 +623,45 @@ void d_div(double_st * res, const double_st a, const double_st b){
 	 d_setPrec(res, p+1);
  }
 
+
+ void f_exp(float_st * res, const float_st a) {
+	 int p;
+	 res->_value = exp(f_getVal(a,&p));
+	 f_setPrec(res, p - log2(f_getVal(a,&p)));
+ }
+
+ void d_exp(double_st * res, const double_st a) {
+	 int p;
+	 res->_value = exp(d_getVal(a,&p));
+	 d_setPrec(res, p - log2(d_getVal(a,&p)));
+ }
+
+ void f_log(float_st * res, const float_st a) {
+
+ }
+
+ void d_log(double_st * res, const double_st a) {
+
+ }
+
+ void f_cos(float_st * res, const float_st a) {
+
+ }
+
+ void d_cos(double_st * res, const double_st a) {
+
+ }
+
+ void f_sin(float_st * res, const float_st a) {
+
+ }
+
+ void d_sin(double_st * res, const double_st a) {
+
+ }
+
+
+
 /************************* FPHOOKS FUNCTIONS *************************
 * These functions correspond to those inserted into the source code
 * during source to source compilation and are replacement to floating

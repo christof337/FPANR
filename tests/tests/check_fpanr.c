@@ -140,10 +140,28 @@ END_TEST
 
 START_TEST(test_fpanr_d_exp)
 {
+	// setting expected values
+	expected1._value = exp(currentA);
+	expected2._value = exp(_a);
 
+	// --------------------
+	// tested function call
+	// --------------------
+	d_exp(&res,a);
+
+	basicPostTest(&rPrec, &res, &currentRes, &rExp, &expected1, &expected2);
+
+	// precision test
+	// alpha x + 1
+	ck_assert_int_eq(rPrec,aPrec-log2(currentA));
+	ck_assert_int_eq(rPrec,aPrec-log2(_a));
+	// numerical value test
+	ck_assert(d_getVal(expected1,&rPrec)==currentRes);
+//	ck_assert(d_getVal(expected2,&rPrec)==currentRes);
 }
 END_TEST
 
+//TODO : finir les opérations unaires
 START_TEST(test_fpanr_d_log)
 {
 

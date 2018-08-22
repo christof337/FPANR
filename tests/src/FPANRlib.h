@@ -37,6 +37,15 @@ void f_fabs(float_st * res, const float_st a);
 void d_fabs(double_st * res, const double_st a);
 void f_sqrt(float_st * res, const float_st a);
 void d_sqrt(double_st * res, const double_st a);
+void f_exp(float_st * res, const float_st a);
+void d_exp(double_st * res, const double_st a);
+void f_log(float_st * res, const float_st a);
+void d_log(double_st * res, const double_st a);
+void f_cos(float_st * res, const float_st a);
+void d_cos(double_st * res, const double_st a);
+void f_sin(float_st * res, const float_st a);
+void d_sin(double_st * res, const double_st a);
+
 
 /************************* FPHOOKS FUNCTIONS *************************
 * These functions correspond to those inserted into the source code
