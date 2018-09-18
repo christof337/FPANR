@@ -1,0 +1,180 @@
+Checking + float
+clang: warning: -lm: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -lm: 'linker' input unused [-Wunused-command-line-argument]
+Checking at PRECISION 3
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking at PRECISION 13
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking at PRECISION 23
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking + double
+clang: warning: -lm: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -lm: 'linker' input unused [-Wunused-command-line-argument]
+Checking at PRECISION 3
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking at PRECISION 13
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking at PRECISION 23
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking at PRECISION 33
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking at PRECISION 43
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking at PRECISION 53
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking * float
+clang: warning: -lm: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -lm: 'linker' input unused [-Wunused-command-line-argument]
+Checking at PRECISION 3
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking at PRECISION 13
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking at PRECISION 23
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking * double
+clang: warning: -lm: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -lm: 'linker' input unused [-Wunused-command-line-argument]
+Checking at PRECISION 3
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking at PRECISION 13
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking at PRECISION 23
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking at PRECISION 33
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking at PRECISION 43
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking at PRECISION 53
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking / float
+clang: warning: -lm: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -lm: 'linker' input unused [-Wunused-command-line-argument]
+Checking at PRECISION 3
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking at PRECISION 13
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking at PRECISION 23
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking / double
+clang: warning: -lm: 'linker' input unused [-Wunused-command-line-argument]
+clang: warning: -lm: 'linker' input unused [-Wunused-command-line-argument]
+Checking at PRECISION 3
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking at PRECISION 13
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking at PRECISION 23
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking at PRECISION 33
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking at PRECISION 43
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
+Checking at PRECISION 53
+  File "./check.py", line 9
+    for quad, mpfr, fpanr in zip(file("out_quad"), file("out_mpfr"), file("out_fpanr)):
+                                                                                      ^
+SyntaxError: EOL while scanning string literal
+error
