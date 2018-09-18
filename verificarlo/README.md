@@ -1,10 +1,25 @@
-![verificarlo logo](https://avatars1.githubusercontent.com/u/12033642)
-
-## Verificarlo v0.2.0
-
-[![Build Status](https://travis-ci.org/verificarlo/verificarlo.svg?branch=master)](https://travis-ci.org/verificarlo/verificarlo)
+## FPANR v0.1.0
 
 A tool for automatic Montecarlo Arithmetic analysis.
+*This project is a fork of the [verificarlo project](https://github.com/verificarlo/verificarlo). It add the FPANR integration, which provide a powerful tool to track cancellation at no memory cost. Learn more about FPANR [here](https://hal-lirmm.ccsd.cnrs.fr/lirmm-01549601v3/document).*
+
+*To use it with verificarlo, use the environment variable `VERIFICARLO_BACKEND`, and set it to `FPANR`, directly when you execute the executable generated with verificarlo. For instance*
+```bash
+$ cat > test.c <<HERE
+#include <stdio.h>
+int main() {
+  double a = 0;
+  for (int i=0; i < 10000; i++) a += 0.1;
+  printf("%0.17f\n", a);
+  return 0;
+}
+HERE
+$ verificarlo test.c -o test
+$ VERIFICARLO_BACKEND=FPANR ./test
+```
+
+*Please note that this work is on going, and for now you still have to handle the conversions to and from FPANR respectively in the inputs and outputs of your programs.
+A library will be available soon to ease this step, and later it will be completely automated with LLVM.*
 
 ### Using Verificarlo through its Docker image
 
@@ -144,8 +159,8 @@ default value is 53. For a more precise definition of the virtual precision, you
 can refer to https://hal.archives-ouvertes.fr/hal-01192668.
 
 Verificarlo supports two MCA backends. The environement variable
-`VERIFICARLO_BACKEND` is used to select the backend. It can be set to `QUAD` or
-`MPFR`
+`VERIFICARLO_BACKEND` is used to select the backend. It can be set to `QUAD`,
+`MPFR` **or `FPANR`**
 
 The default backend, MPFR, uses the GNU multiple precision library to compute
 MCA operations. It is heavily based on mcalib MPFR backend.
