@@ -30,38 +30,74 @@
 #define MAX(A,B) (((A)>(B)) ? (A) : (B))
 #define MIN(A,B) (((A)<(B)) ? (A) : (B))
 
+/**
+ * Manual handling of max precisions.
+ * TODO : use a system call to learn the actual mantissa maximum length.
+ */
 #define PREC_MAX_FLOAT 22
 #define PREC_MAX_DOUBLE 51
 
-#define DEBUG 0
+/**
+ * Switch DEBUG to 1 if you want to have a verbose output.
+ */
+#define DEBUG 1
 
 // --------------------------------------
 
+/**
+ * Convert the given fpanr value into a readable and exportable IEEE754 float.
+ */
 float fpanrToFloat(const float fpanrVal) {
+#if DEBUG
+	printf("\t fpanrToFloat");
+#endif
 	int prec;
 	float_st fpanrVal_st;
 	fpanrVal_st._value = fpanrVal;
-	return f_getVal(fpanrVal_st, prec);
+	return f_getVal(fpanrVal_st, &prec);
 }
 
 float floatToFpanr(const float floatVal) {
+#if DEBUG
+	printf("\t floatToFpanr");
+#endif
+	return floatToFpanrWithPrec(floatVal, PREC_MAX_FLOAT);
+}
+
+float floatToFpanrWithPrec(const float floatVal, const int prec) {
+#if DEBUG
+	printf("\t floatToFpanrWithPrec");
+#endif
 	float_st fpanrVal;
 	fpanrVal._value = floatVal;
-	f_setPrecMax(&fpanrVal);
+	f_setPrec(&fpanrVal, prec);
 	return fpanrVal._value;
 }
 
 double fpanrToDouble(const double fpanrVal) {
+#if DEBUG
+	printf("\t fpanrToDouble");
+#endif
 	int prec;
 	double_st fpanrVal_st;
 	fpanrVal_st._value = fpanrVal;
-	return d_getVal(fpanrVal_st, prec);
+	return d_getVal(fpanrVal_st, &prec);
 }
 
 double doubleToFpanr(const double doubleVal) {
+#if DEBUG
+	printf("\t doubleToFpanr");
+#endif
+	return doubleToFpanrWithPrec(doubleVal, PREC_MAX_DOUBLE);
+}
+
+double doubleToFpanrWithPrec(const double doubleVal, const int prec) {
+#if DEBUG
+	printf("\t doubleToFpanr");
+#endif
 	double_st fpanrVal;
 	fpanrVal._value = doubleVal;
-	d_setPrecMax(&fpanrVal);
+	d_setPrec(&fpanrVal, prec);
 	return fpanrVal._value;
 }
 
@@ -72,7 +108,7 @@ unsigned count_trailing_zeros(const unsigned long n) {
 	return __builtin_ctzll(n);
 }
 
-void f_setPrec(float_st * this, const int prec) {
+void f_setPrec(float_st * this, int prec) {
 	union ieee754_float d;
 	d.f = this->_value;
 
@@ -84,7 +120,7 @@ void f_setPrec(float_st * this, const int prec) {
 	this->_value = d.f;
 }
 
-void d_setPrec(double_st * this, const int prec) {
+void d_setPrec(double_st * this, int prec) {
 #if DEBUG
 	printf("\t setPrec");
 #endif

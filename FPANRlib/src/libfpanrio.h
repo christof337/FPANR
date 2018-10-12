@@ -21,15 +21,19 @@ typedef struct {
 	float _value;
 }float_st;
 
+// --------------------------------------
+
 float fpanrToFloat(const float fpanrVal);
 float floatToFpanr(const float floatVal);
+float floatToFpanrWithPrec(const float floatVal, const int prec);
 
 double fpanrToDouble(const double fpanrVal);
 double doubleToFpanr(const double doubleVal);
+double doubleToFpanrWithPrec(const double doubleVal, const int prec);
 
 unsigned count_trailing_zeros(const unsigned long n) ;
-void f_setPrec(float_st * _this, const int prec) ;
-void d_setPrec(double_st * _this, const int prec) ;
+void f_setPrec(float_st * _this, int prec) ;
+void d_setPrec(double_st * _this, int prec) ;
 void f_setPrecMax(float_st * _this) ;
 void d_setPrecMax(double_st * _this) ;
 unsigned f_getPrec(const float_st _this) ;
