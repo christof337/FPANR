@@ -1,5 +1,6 @@
 ACLOCAL_AMFLAGS=-I m4
-SUBDIRS=src/
+# subdirectories to build
+SUBDIRS=src/ examples/
 #dist_bin_SCRIPTS=fpanr
 
 #edit_script = $(SED) -e 's,%LIBDIR%,$(libdir),'g $(NULL)
