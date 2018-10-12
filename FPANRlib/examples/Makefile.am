@@ -1,4 +1,4 @@
-bin_PROGRAMS = hello
-hello_SOURCES = main.c libfpanrio.h
+bin_PROGRAMS = conversion
+conversion_SOURCES = conversion.c libfpanrio.h fp2bin.h
 
-hello_LDADD = ../src/libfpanrio.la
+conversion_LDADD = ../src/libfpanrio.la ../src/libfp2bin.a
