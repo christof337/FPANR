@@ -40,7 +40,7 @@
 /**
  * Switch DEBUG to 1 if you want to have a verbose output.
  */
-#define DEBUG 1
+#define DEBUG 0
 
 // --------------------------------------
 
@@ -74,6 +74,15 @@ float floatToFpanrWithPrec(const float floatVal, const int prec) {
 	return fpanrVal._value;
 }
 
+unsigned getPrecFromFpanrFloat(const float floatVal) {
+#if DEBUG
+	printf("\t getFpanrFloatPrec");
+#endif
+	float_st fpanrVal;
+	fpanrVal._value = floatVal;
+	return f_getPrec(fpanrVal);
+}
+
 double fpanrToDouble(const double fpanrVal) {
 #if DEBUG
 	printf("\t fpanrToDouble");
@@ -100,6 +109,17 @@ double doubleToFpanrWithPrec(const double doubleVal, const int prec) {
 	d_setPrec(&fpanrVal, prec);
 	return fpanrVal._value;
 }
+
+unsigned getPrecFromFpanrDouble(const double doubleVal) {
+#if DEBUG
+	printf("\t getFpanrDoublePrec");
+#endif
+	double_st fpanrVal;
+	fpanrVal._value = doubleVal;
+	return d_getPrec(fpanrVal);
+}
+
+// --------------------------------------
 
 unsigned count_trailing_zeros(const unsigned long n) {
 #if DEBUG
@@ -239,6 +259,21 @@ void f_set(float_st * dest, const float_st source) {
 
 void d_set(double_st * dest, const double_st source) {
 	dest->_value = source._value;
+}
+
+void d_add(double_st * res, const double_st a, const double_st b){
+#if DEBUG
+	printf("\t d_add");
+#endif
+	int e1, e2, er;
+	int p1, p2;
+
+	frexp(a._value, &e1);
+	frexp(b._value, &e2);
+	res->_value = d_getVal(a, &p1) + d_getVal(b, &p2);
+
+	frexp(res->_value, &er);
+	d_setPrec(res,er - MAX((e1-p1) , (e2-p2)));
 }
 
 /************************* FPHOOKS FUNCTIONS *************************

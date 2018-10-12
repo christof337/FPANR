@@ -26,10 +26,12 @@ typedef struct {
 float fpanrToFloat(const float fpanrVal);
 float floatToFpanr(const float floatVal);
 float floatToFpanrWithPrec(const float floatVal, const int prec);
+unsigned getPrecFromFpanrFloat(const float floatVal);
 
 double fpanrToDouble(const double fpanrVal);
 double doubleToFpanr(const double doubleVal);
 double doubleToFpanrWithPrec(const double doubleVal, const int prec);
+unsigned getPrecFromFpanrDouble(const double doubleVal);
 
 unsigned count_trailing_zeros(const unsigned long n) ;
 void f_setPrec(float_st * _this, int prec) ;
@@ -43,5 +45,6 @@ double d_getVal(const double_st _this, int *prec) ;
 void f_set(float_st * dest, const float_st source);
 void d_set(double_st * dest, const double_st source);
 
+void d_add(double_st * res, const double_st a, const double_st b);
 
 #endif /* SRC_LIBFPANR_LIBFPANR_H_ */
