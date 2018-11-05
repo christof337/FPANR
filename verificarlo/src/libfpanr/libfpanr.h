@@ -21,15 +21,15 @@ typedef struct {
 	float _value;
 }float_st;
 
-unsigned count_trailing_zeros(unsigned long n) ;
-void f_setPrec(float_st * _this, int prec) ;
-void d_setPrec(double_st * _this, int prec) ;
-void f_setPrecMax(float_st * _this) ;
-void d_setPrecMax(double_st * _this) ;
-unsigned f_getPrec(float_st _this) ;
-unsigned d_getPrec(double_st _this) ;
-float f_getVal(float_st _this, int *prec) ;
-double d_getVal(const double_st _this, int *prec) ;
+unsigned count_trailing_zeros(const unsigned long n) ;
+void f_setPrec(float_st * fpanrFVal, int prec) ;
+void d_setPrec(double_st * fpanrDVal, int prec) ;
+void f_setPrecMax(float_st * fpanrFVal) ;
+void d_setPrecMax(double_st * fpanrDVal) ;
+unsigned f_getPrec(float_st fpanrFVal) ;
+unsigned d_getPrec(double_st fpanrDVal) ;
+float f_getVal(const float_st fpanrFVal, int *prec) ;
+double d_getVal(const double_st fpanrDVal, int *prec) ;
 void f_set(float_st * dest, const float_st source);
 void d_set(double_st * dest, const double_st source);
 

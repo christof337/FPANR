@@ -19,9 +19,6 @@
 // this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <math.h>
 #include <stdio.h>
-//#include <stdlib.h>
-//#include <sys/time.h>
-//#include <unistd.h>
 
 #include "ieee754.h"
 
@@ -31,40 +28,47 @@
 #define MAX(A,B) (((A)>(B)) ? (A) : (B))
 #define MIN(A,B) (((A)<(B)) ? (A) : (B))
 
-#define DEBUG 0
+/**
+ * Manual handling of max precisions.
+ * TODO : use a system call to learn the actual mantissa maximum length.
+ */
+#define PREC_MAX_FLOAT 22
+#define PREC_MAX_DOUBLE 51
+
+/**
+ * Switch DEBUG to 1 if you want to have a verbose output.
+ */
+#define DEBUG 1
 
 // --------------------------------------
 
-unsigned count_trailing_zeros(unsigned long n) {
-	//LOG("");
+unsigned count_trailing_zeros(const unsigned long n) {
 #if DEBUG
 	printf("\t count_trailing_zeros");
 #endif
 	return __builtin_ctzll(n);
 }
 
-void f_setPrec(float_st * this, int prec) {
-	//LOG("");
+void f_setPrec(float_st * fpanrFVal, int prec) {
 	union ieee754_float d;
-	d.f = this->_value;
+	d.f = fpanrFVal->_value;
 
-	prec = MIN(22, prec);
+	prec = MIN(PREC_MAX_FLOAT, prec);
 
 	d.ieee.mantissa &= (0x7FFFFF << (23 - prec));
-	d.ieee.mantissa |= 1 << (22 - prec); // set the leading 1
+	d.ieee.mantissa |= 1 << (PREC_MAX_FLOAT - prec); // set the leading 1
 
-	this->_value = d.f;
+	fpanrFVal->_value = d.f;
 }
 
-void d_setPrec(double_st * this, int prec) {
+void d_setPrec(double_st * fpanrDVal, int prec) {
 #if DEBUG
 	printf("\t setPrec");
 #endif
-	//LOG("");
 	union ieee754_double d;
-	d.d = this->_value;
+	d.d = fpanrDVal->_value;
 
-	prec = MIN(51, prec);
+	prec = MIN(PREC_MAX_DOUBLE, prec);
 
 	if (prec < 20) {
 		d.ieee.mantissa0 &= (0xFFFFFu << (20 - prec));
@@ -79,30 +83,28 @@ void d_setPrec(double_st * this, int prec) {
 			d.ieee.mantissa1 |= 1 << (31 - (prec - 20)); // set the leading 1
 		}
 	}
-	this->_value = d.d;
+	fpanrDVal->_value = d.d;
 }
 
-void d_setPrecMax(double_st * this) {
+void d_setPrecMax(double_st * fpanrDVal) {
 #if DEBUG
 	printf("\t setPrecMax");
 #endif
-	//LOG("");
-	d_setPrec(this, 51);
+	d_setPrec(fpanrDVal, PREC_MAX_DOUBLE);
 }
 
-void f_setPrecMax(float_st * this) {
-	//LOG("");
-	f_setPrec(this, 22);
+void f_setPrecMax(float_st * fpanrFVal) {
+	f_setPrec(fpanrFVal, PREC_MAX_FLOAT);
 }
 
-unsigned d_getPrec(double_st this) {
+unsigned d_getPrec(const double_st fpanrDVal) {
 #if DEBUG
 	printf("\t getPrec");
 #endif
 	union ieee754_double d;
 	unsigned c;
 
-	d.d = this._value;
+	d.d = fpanrDVal._value;
 
 	if (d.ieee.mantissa1 != 0) {
 		c = count_trailing_zeros(d.ieee.mantissa1);
@@ -111,35 +113,35 @@ unsigned d_getPrec(double_st this) {
 			c = count_trailing_zeros(d.ieee.mantissa0);
 			c += 32;
 		} else {
-			c = 51;
+			c = PREC_MAX_DOUBLE;
 		}
 	}
-	return (51 - c); // 51 bits max as there are 52 bits of mantissa minus 1 bit for the flag
+	return (PREC_MAX_DOUBLE - c); // 51 bits max as there are 52 bits of mantissa minus 1 bit for the flag
 }
 
-unsigned f_getPrec(float_st this) {
+unsigned f_getPrec(const float_st fpanrFVal) {
 	union ieee754_float d;
 	unsigned c;
 
-	d.f = this._value;
+	d.f = fpanrFVal._value;
 
 	if (d.ieee.mantissa != 0) {
 		c = count_trailing_zeros(d.ieee.mantissa);
 	} else {
-		c = 22;
+		c = PREC_MAX_FLOAT;
 	}
 
-	return (22 - c); // 22 bits max as there are 23 bits of mantissa minus 1 bit for the flag
+	return (PREC_MAX_FLOAT - c); // 22 bits max as there are 23 bits of mantissa minus 1 bit for the flag
 }
 
-double d_getVal(const double_st this, int *prec) {
+double d_getVal(const double_st fpanrDVal, int *prec) {
 #if DEBUG
 	printf("\t getVal");
 #endif
 	union ieee754_double d;
 	int c;
 
-	d.d = this._value;
+	d.d = fpanrDVal._value;
 
 	if (d.ieee.mantissa1 != 0) {
 		c = count_trailing_zeros(d.ieee.mantissa1);
@@ -150,14 +152,14 @@ double d_getVal(const double_st this, int *prec) {
 			d.ieee.mantissa0 ^= 1 << c; // remove the leading 1
 			c += 32;
 		} else {
-			c = 51;
+			c = PREC_MAX_DOUBLE;
 		}
 	}
-	*prec = 51 - c;
+	*prec = PREC_MAX_DOUBLE - c;
 	return (d.d);
 }
 
-float f_getVal(float_st this, int *prec) {
+float f_getVal(const float_st this, int *prec) {
 	union ieee754_float d;
 	int c;
 
@@ -168,7 +170,7 @@ float f_getVal(float_st this, int *prec) {
 		d.ieee.mantissa ^= 1 << c; // remove the leading 1
 	}
 
-	*prec = 22 - c;
+	*prec = PREC_MAX_FLOAT - c;
 	return (d.f);
 }
 
@@ -181,7 +183,6 @@ void d_set(double_st * dest, const double_st source) {
 }
 
 void f_add(float_st * res, const float_st a, const float_st b) {
-	// LOG("")
 #if DEBUG
 	printf("\t f_add");
 #endif
@@ -194,12 +195,9 @@ void f_add(float_st * res, const float_st a, const float_st b) {
 
 	frexp(res->_value, &er);
 	f_setPrec(res, er - MAX((e1 - p1), (e2 - p2)));
-
-	//return *this;
 }
 
 void d_add(double_st * res, const double_st a, const double_st b) {
-	//LOG("");
 #if DEBUG
 	printf("\t d_add");
 #endif
@@ -212,13 +210,9 @@ void d_add(double_st * res, const double_st a, const double_st b) {
 
 	frexp(res->_value, &er);
 	d_setPrec(res, er - MAX((e1 - p1), (e2 - p2)));
-//	printf("\n**********%d",er - MAX((e1-p1) , (e2-p2)));
-
-//    return *this;
 }
 
 void f_sub(float_st * res, const float_st a, const float_st b) {
-//	//LOG("");
 #if DEBUG
 	printf("\t f_sub");
 #endif
@@ -231,12 +225,9 @@ void f_sub(float_st * res, const float_st a, const float_st b) {
 
 	frexp(res->_value, &er);
 	f_setPrec(res, er - MAX((e1 - p1), (e2 - p2)));
-
-//    return *this;
 }
 
 void d_sub(double_st * res, const double_st a, const double_st b) {
-//	//LOG("");
 #if DEBUG
 	printf("\t d_sub");
 #endif
@@ -249,12 +240,9 @@ void d_sub(double_st * res, const double_st a, const double_st b) {
 
 	frexp(res->_value, &er);
 	d_setPrec(res, er - MAX((e1 - p1), (e2 - p2)));
-
-//    return *this;
 }
 
 void f_mul(float_st * res, const float_st a, const float_st b) {
-//	//LOG("");
 #if DEBUG
 	printf("\t f_mul");
 #endif
@@ -263,12 +251,9 @@ void f_mul(float_st * res, const float_st a, const float_st b) {
 	res->_value = f_getVal(a, &p1) * f_getVal(b, &p2);
 
 	f_setPrec(res, MIN(p1, p2));
-
-//    return *this;
 }
 
 void d_mul(double_st * res, const double_st a, const double_st b) {
-//	//LOG("");
 #if DEBUG
 	printf("\t d_mul");
 #endif
@@ -277,12 +262,9 @@ void d_mul(double_st * res, const double_st a, const double_st b) {
 	res->_value = d_getVal(a, &p1) * d_getVal(b, &p2);
 
 	d_setPrec(res, MIN(p1, p2));
-
-//    return *this;
 }
 
 void f_div(float_st * res, const float_st a, const float_st b) {
-//	//LOG("");
 #if DEBUG
 	printf("\t f_div");
 #endif
@@ -291,12 +273,9 @@ void f_div(float_st * res, const float_st a, const float_st b) {
 	res->_value = f_getVal(a, &p1) / f_getVal(b, &p2);
 
 	f_setPrec(res, MIN(p1, p2));
-
-//    return *this;
 }
 
 void d_div(double_st * res, const double_st a, const double_st b) {
-//	//LOG("");
 #if DEBUG
 	printf("\t d_div");
 #endif
@@ -305,8 +284,6 @@ void d_div(double_st * res, const double_st a, const double_st b) {
 	res->_value = d_getVal(a, &p1) / d_getVal(b, &p2);
 
 	d_setPrec(res, MIN(p1, p2));
-
-//    return *this;
 }
 
 void f_fabs(float_st * res, const float_st a) {
