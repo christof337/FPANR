@@ -19,7 +19,7 @@ $ VERIFICARLO_BACKEND=FPANR ./test
 ```
 
 *Please note that this work is on going, and for now you still have to handle the conversions to and from FPANR respectively in the inputs and outputs of your programs.
-A library will be available soon to ease this step, and later it will be completely automated with LLVM.*
+A [library](https://github.com/christof337/FPANR/tree/master/FPANRlib) is now available to ease this step, and later it will be completely automated with LLVM.*
 
 ### Using Verificarlo through its Docker image
 
