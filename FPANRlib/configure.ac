@@ -3,7 +3,7 @@
 #LT_INIT
 
 AC_PREREQ([2.69])
-AC_INIT([fpanriolib], [1.0.1], [christophe.pont@univ-perp.fr])
+AC_INIT([fpanriolib], [1.0.2], [christophe.pont@univ-perp.fr])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 AC_CONFIG_SRCDIR([src/libfpanrio.h])
 AC_CONFIG_HEADERS([config.h])
