@@ -1,6 +1,6 @@
 # libtool dynamic shared library
 lib_LTLIBRARIES = libfpanrio.la
-libfpanrio_la_SOURCES = libfpanrio.c libfpanrio.h
+libfpanrio_la_SOURCES = libfpanrio.c 
 # EXTRA_DIST = libfpanrio.h
 libfpanrio_la_LDFLAGS = -lm
 #libfpanrio_la_LIBADD = ../common/libtinymt64.la
