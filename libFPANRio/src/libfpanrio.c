@@ -85,11 +85,14 @@ unsigned getPrecFromFpanrFloat(const float floatVal) {
 
 double fpanrToDouble(const double fpanrVal) {
 #if DEBUG
-	printf("\t fpanrToDouble");
+	printf("\t fpanrToDouble - début");
 #endif
 	int prec;
 	double_st fpanrVal_st;
 	fpanrVal_st._value = fpanrVal;
+#if DEBUG
+	printf("\t fpanrToDouble - fin");
+#endif
 	return d_getVal(fpanrVal_st, &prec);
 }
 
@@ -102,11 +105,14 @@ double doubleToFpanr(const double doubleVal) {
 
 double doubleToFpanrWithPrec(const double doubleVal, const int prec) {
 #if DEBUG
-	printf("\t doubleToFpanr");
+	printf("\t doubleToFpanrWithPrec - début");
 #endif
 	double_st fpanrVal;
 	fpanrVal._value = doubleVal;
 	d_setPrec(&fpanrVal, prec);
+#if DEBUG
+	printf("\t doubleToFpanrWithPrec - fin");
+#endif
 	return fpanrVal._value;
 }
 
