@@ -1,7 +1,9 @@
-## FPANR v0.1.0
+## FPANR v1.0.1
 
 A tool for automatic Montecarlo Arithmetic analysis.
-*This project is a fork of the [verificarlo project](https://github.com/verificarlo/verificarlo). It add the FPANR integration, which provide a powerful tool to track cancellation at no memory cost. Learn more about FPANR [here](https://hal-lirmm.ccsd.cnrs.fr/lirmm-01549601v3/document).*
+*This project is a fork of the [verificarlo project](https://github.com/verificarlo/verificarlo). It adds the FPANR integration, which provide a powerful tool to track cancellation at no memory cost. Learn more about FPANR [here](https://hal-lirmm.ccsd.cnrs.fr/lirmm-01549601v3/document).*
+
+*It relies on verificarlo environment to process its inputs, hence the following instructions mostly follows [verificarlo](https://github.com/verificarlo/verificarlo)'s instructions.*
 
 *To use it with verificarlo, use the environment variable `VERIFICARLO_BACKEND`, and set it to `FPANR`, directly when you execute the executable generated with verificarlo. For instance*
 ```bash
@@ -20,35 +22,6 @@ $ VERIFICARLO_BACKEND=FPANR ./test
 
 *Please note that this work is on going, and for now you still have to handle the conversions to and from FPANR respectively in the inputs and outputs of your programs.
 A [library](https://github.com/christof337/FPANR/tree/master/FPANRlib) is now available to ease this step, and later it will be completely automated with LLVM.*
-
-### Using Verificarlo through its Docker image
-
-A docker image is available at https://hub.docker.com/r/verificarlo/verificarlo/. 
-This image uses the last git master version of Verificarlo and includes support for Fortran and uses llvm-3.5 and gcc-4.7.
-
-Example of usage:
-
-```bash
-$ cat > test.c <<HERE
-#include <stdio.h>
-int main() {
-  double a = 0;
-  for (int i=0; i < 10000; i++) a += 0.1;
-  printf("%0.17f\n", a);
-  return 0;
-}
-HERE
-
-$ docker pull verificarlo/verificarlo
-$ docker run -v $PWD:/workdir verificarlo/verificarlo \
-   verificarlo test.c -o test
-$ docker run -v $PWD:/workdir verificarlo/verificarlo \
-   ./test
-999.99999999999795364
-$ docker run -v $PWD:/workdir verificarlo/verificarlo \
-   ./test
-999.99999999999761258
-```
 
 ### Installation
 
