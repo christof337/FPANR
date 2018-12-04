@@ -1,4 +1,4 @@
-## FPANR v1.0.1
+## FPANR v0.0.2
 
 A tool for automatic Montecarlo Arithmetic analysis.
 *This project is a fork of the [verificarlo project](https://github.com/verificarlo/verificarlo). It adds the FPANR integration, which provide a powerful tool to track cancellation at no memory cost. Learn more about FPANR [here](https://hal-lirmm.ccsd.cnrs.fr/lirmm-01549601v3/document).*
