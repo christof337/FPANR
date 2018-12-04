@@ -62,6 +62,7 @@ static void vfc_select_interface_quad(void) {
     _vfc_current_mca_interface.set_mca_mode(verificarlo_mcamode);
 }
 
+
 /* Activates the fpanr backend */
 static void vfc_select_interface_fpanr(void) {
 	_vfc_current_mca_interface = fpanr_interface;
@@ -88,9 +89,6 @@ int vfc_set_precision_and_mode(unsigned int precision, int mode) {
     }
     else if (verificarlo_backend == MCABACKEND_QUAD){
       vfc_select_interface_quad();
-    }
-    else if (verificarlo_backend == BACKEND_FPANR) {
-      vfc_select_interface_fpanr();
     }
     else {
     	perror("Invalid backend name in backend setting\n");
@@ -150,8 +148,8 @@ static void vfc_init (void)
         verificarlo_backend = MCABACKEND_MPFR;
       }
       else if (strcmp("FPANR", backend) == 0) {
-    	  verificarlo_backend = BACKEND_FPANR;
-      }else {
+    	verificarlo_backend = BACKEND_FPANR;
+      } else {
         /* Invalid value provided */
         fprintf(stderr, VERIFICARLO_BACKEND
                 " invalid value provided, defaulting to default\n");
@@ -160,6 +158,7 @@ static void vfc_init (void)
 
     /* seed the backends */
     vfc_seed();
+
     /* set precision and mode */
     vfc_set_precision_and_mode(verificarlo_precision, verificarlo_mcamode);
 }

@@ -1,5 +1,5 @@
 AC_PREREQ([2.69])
-AC_INIT([verificarlo], [0.2.0], [])
+AC_INIT([verificarlo], [0.2.1], [])
 AM_SILENT_RULES([yes])
 AC_CONFIG_AUX_DIR(autoconf)
 AC_CONFIG_MACRO_DIR([m4])
@@ -24,7 +24,7 @@ AX_LLVM([3.3],[4.0.1],[all])
 AC_SUBST(LLVM_CPPFLAGS, $LLVM_CPPFLAGS)
 AC_SUBST(LLVM_LDFLAGS, $LLVM_LDFLAGS)
 
-AC_PATH_PROG([CLANG], [clang], "", $LLVM_BINDIR/)
+AC_PATH_PROG([CLANG], [clang], "", $LLVM_BINDIR/ $PATH)
 if test -z "$CLANG"; then
    AC_PATH_PROGS([CLANG], [clang-"$LLVM_VERSION_MAJOR"."$LLVM_VERSION_MINOR" clang], "")
 fi
@@ -124,9 +124,9 @@ AC_CONFIG_FILES([Makefile
                  src/Makefile
                  src/libvfcinstrument/Makefile
                  src/libmca-mpfr/Makefile
-		 		 src/libmca-quad/Makefile
-				 src/common/Makefile
-				 src/libfpanr/Makefile
+		 src/libmca-quad/Makefile
+		 src/common/Makefile
+		 src/libfpanr/Makefile
                  tests/Makefile])
 
 AC_CONFIG_FILES([verificarlo.in], [])

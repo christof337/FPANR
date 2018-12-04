@@ -17,10 +17,6 @@ Check() {
         ./test > out_quad.orig
         cat out_quad.orig | grep 'TEST>' | cut -d'>' -f 2 > out_quad
         
-        export VERIFICARLO_BACKEND="FPANR"
-        ./test > out_fpanr.orig
-        cat out_fpanr.orig | grep 'TEST>' | cut -d'>' -f 2 > out_fpanr
-        
         ./check.py
         if [ $? -ne 0 ] ; then
             echo "error"
