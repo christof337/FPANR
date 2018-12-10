@@ -90,6 +90,10 @@ int vfc_set_precision_and_mode(unsigned int precision, int mode) {
     else if (verificarlo_backend == MCABACKEND_QUAD){
       vfc_select_interface_quad();
     }
+    else if (verificarlo_backend == BACKEND_FPANR) {
+      vfc_select_interface_fpanr();
+    }
+
     else {
     	perror("Invalid backend name in backend setting\n");
 	exit(-1);
