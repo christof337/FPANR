@@ -1,10 +1,8 @@
-#include <config.h>
 #include <stdio.h>
 #include <math.h>
 
-// FIXME : trouver comment linker dynamiquement le chemin
-#include "../src/libfpanrio.h"
-#include "../src/fp2bin.h"
+#include "libfpanrio.h"
+#include "fp2bin.h"
 
 #define A_PREC 26
 #define B_PREC 37

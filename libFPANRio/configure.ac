@@ -3,7 +3,7 @@
 #LT_INIT
 
 AC_PREREQ([2.69])
-AC_INIT([fpanriolib], [1.0.2], [christophe.pont@univ-perp.fr])
+AC_INIT([libfpanrio], [1.0.2], [christophe.pont@univ-perp.fr])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 AC_CONFIG_SRCDIR([src/libfpanrio.h])
 AC_CONFIG_HEADERS([config.h])
@@ -28,8 +28,7 @@ AC_CHECK_LIB([m], [sqrt])
 AC_CHECK_FUNCS([sqrt])
 
 AC_CONFIG_FILES([Makefile
-                 src/Makefile
-                 examples/Makefile])
+                 src/Makefile])
                  
 LT_INIT
 AC_SUBST([LIBTOOL_DEPS])
