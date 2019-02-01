@@ -38,7 +38,7 @@
 /**
  * Switch DEBUG to 1 if you want to have a verbose output.
  */
-#define DEBUG 1
+#define DEBUG 0
 
 // --------------------------------------
 
@@ -362,7 +362,8 @@ static float _floatadd(float _a, float _b) {
 	b._value = _b;
 	f_add(&res, a, b);
 	int prec = f_getPrec(res);
-	return f_getVal(res, &prec);
+	return res._value;
+	//return f_getVal(res, &prec);
 //	return _mca_sbin(a, b,(mpfr_bin)MP_ADD);
 }
 
@@ -376,7 +377,8 @@ static float _floatsub(float _a, float _b) {
 	b._value = _b;
 	f_sub(&res, a, b);
 	int prec = f_getPrec(res);
-	return f_getVal(res, &prec);
+	return res._value;
+	//return f_getVal(res, &prec);
 //	return _mca_sbin(a, b, (mpfr_bin)MP_SUB);
 }
 
@@ -390,7 +392,8 @@ static float _floatmul(float _a, float _b) {
 	b._value = _b;
 	f_mul(&res, a, b);
 	int prec = f_getPrec(res);
-	return f_getVal(res, &prec);
+	return res._value;
+	//return f_getVal(res, &prec);
 //	return _mca_sbin(a, b, (mpfr_bin)MP_MUL);
 }
 
@@ -404,7 +407,8 @@ static float _floatdiv(float _a, float _b) {
 	b._value = _b;
 	f_div(&res, a, b);
 	int prec = f_getPrec(res);
-	return f_getVal(res, &prec);
+	return res._value;
+	//return f_getVal(res, &prec);
 //	return _mca_sbin(a, b, (mpfr_bin)MP_DIV);
 }
 
@@ -418,7 +422,8 @@ static double _doubleadd(double _a, double _b) {
 	b._value = _b;
 	d_add(&res, a, b);
 	int prec = d_getPrec(res);
-	return d_getVal(res, &prec);
+	return res._value;
+	//return d_getVal(res, &prec);
 //	return _mca_dbin(a, b, (mpfr_bin)MP_ADD);
 }
 
@@ -432,7 +437,8 @@ static double _doublesub(double _a, double _b) {
 	b._value = _b;
 	d_sub(&res, a, b);
 	int prec = d_getPrec(res);
-	return d_getVal(res, &prec);
+	return res._value;
+	//return d_getVal(res, &prec);
 //	return _mca_dbin(a, b, (mpfr_bin)MP_SUB);
 }
 
@@ -446,7 +452,8 @@ static double _doublemul(double _a, double _b) {
 	b._value = _b;
 	d_mul(&res, a, b);
 	int prec = d_getPrec(res);
-	return d_getVal(res, &prec);
+	return res._value;
+	//return d_getVal(res, &prec);
 //	return _mca_dbin(a, b, (mpfr_bin)MP_MUL);
 }
 
@@ -460,7 +467,8 @@ static double _doublediv(double _a, double _b) {
 	b._value = _b;
 	d_div(&res, a, b);
 	int prec = d_getPrec(res);
-	return d_getVal(res, &prec);
+	return res._value;
+	//return d_getVal(res, &prec);
 	//return _mca_dbin(a, b, (mpfr_bin)MP_DIV);
 }
 
