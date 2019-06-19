@@ -20,8 +20,9 @@
 //
 // You should have received a copy of the GNU General Public License along with
 // this program.  If not, see <http://www.gnu.org/licenses/>.
-#include <math.h>
 #include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
 
 #include "ieee754.h"
 
@@ -43,6 +44,10 @@
 #define DEBUG 0
 
 // --------------------------------------
+
+// ---------------
+//     float
+// ---------------
 
 /**
  * Convert the given fpanr value into a readable and exportable IEEE754 float.
@@ -82,6 +87,19 @@ unsigned getPrecFromFpanrFloat(const float floatVal) {
 	fpanrVal._value = floatVal;
 	return f_getPrec(fpanrVal);
 }
+
+char * fpanrFloatToStr(const float fpanrVal) {
+	int p = getPrecFromFpanrFloat(fpanrVal);
+	float val = fpanrToFloat(fpanrVal);
+    size_t needed = snprintf(NULL, 0, "%g (%d)", val, p);
+    char  *buffer = malloc(needed+1);
+    sprintf(buffer, "%g (%d)", val, p);
+    return buffer;
+}
+
+// --------------
+//    double
+// --------------
 
 double fpanrToDouble(const double fpanrVal) {
 #if DEBUG
@@ -123,6 +141,15 @@ unsigned getPrecFromFpanrDouble(const double doubleVal) {
 	double_st fpanrVal;
 	fpanrVal._value = doubleVal;
 	return d_getPrec(fpanrVal);
+}
+
+char * fpanrDoubleToStr(const double fpanrVal) {	
+	int p = getPrecFromFpanrDouble(fpanrVal);
+	double val = fpanrToDouble(fpanrVal);
+    size_t needed = snprintf(NULL, 0, "%g (%d)", val, p);
+    char  *buffer = malloc(needed+1);
+    sprintf(buffer, "%g (%d)", val, p);
+    return buffer;
 }
 
 // --------------------------------------
@@ -267,20 +294,95 @@ void d_set(double_st * dest, const double_st source) {
 	dest->_value = source._value;
 }
 
-void d_add(double_st * res, const double_st a, const double_st b){
-#if DEBUG
-	printf("\t d_add");
-#endif
-	int e1, e2, er;
-	int p1, p2;
-
-	frexp(a._value, &e1);
-	frexp(b._value, &e2);
-	res->_value = d_getVal(a, &p1) + d_getVal(b, &p2);
-
-	frexp(res->_value, &er);
-	d_setPrec(res,er - MAX((e1-p1) , (e2-p2)));
+void f_fabs(float_st * res, const float_st a) {
+	int p;
+	res->_value = fabs(f_getVal(a, &p));
+	f_setPrec(res, p);
 }
+
+void d_fabs(double_st * res, const double_st a) {
+	int p;
+	res->_value = fabs(d_getVal(a, &p));
+	d_setPrec(res, p);
+}
+
+void f_sqrt(float_st * res, const float_st a) {
+	int p;
+	res->_value = sqrt(f_getVal(a, &p));
+	f_setPrec(res, p + 1);
+}
+
+void d_sqrt(double_st * res, const double_st a) {
+	int p;
+	res->_value = sqrt(d_getVal(a, &p));
+	d_setPrec(res, p + 1);
+}
+
+void f_exp(float_st * res, const float_st a) {
+	int p;
+	res->_value = exp(f_getVal(a, &p));
+	f_setPrec(res, p - log2(f_getVal(a, &p)));
+}
+
+void d_exp(double_st * res, const double_st a) {
+	int p;
+	res->_value = exp(d_getVal(a, &p));
+	d_setPrec(res, p - log2(d_getVal(a, &p)));
+}
+
+double log2(double val) {
+  return log(val)/log(2);
+}
+
+void f_log(float_st * res, const float_st a) {
+  int p;
+  float val = f_getVal(a,&p);
+  res->_value = log(val);
+  f_setPrec(res,p+log2(log(val)));
+}
+
+void d_log(double_st * res, const double_st a) {
+  int p;
+  fflush(stdout);
+  double val = d_getVal(a,&p);
+  fflush(stdout);
+
+  res->_value = log(val);
+  fflush(stdout);
+
+  d_setPrec(res,p+log2(log(val)));
+  fflush(stdout);
+
+}
+
+void f_cos(float_st * res, const float_st a) {
+  int p;
+  float val = f_getVal(a,&p);
+  res->_value = cos(val);
+  f_setPrec(res, p+((log2(cos(val)/(val*sin(val))))));
+}
+
+void d_cos(double_st * res, const double_st a) {
+  int p;
+  double val = d_getVal(a,&p);
+  res->_value = cos(val);
+  d_setPrec(res, p+log2(cos(val)/(val*sin(val))));
+}
+
+void f_sin(float_st * res, const float_st a) {
+  int p;
+  float val = f_getVal(a,&p);
+  res->_value = sin(val);
+  f_setPrec(res, p+log2(sin(val)/(val*cos(val))));
+}
+
+void d_sin(double_st * res, const double_st a) {
+  int p;
+  double val = d_getVal(a,&p);
+  res->_value = sin(val);
+  d_setPrec(res, p+log2(sin(val)/(val*cos(val))));
+}
+
 
 /************************* FPHOOKS FUNCTIONS *************************
  * These functions correspond to those inserted into the source code

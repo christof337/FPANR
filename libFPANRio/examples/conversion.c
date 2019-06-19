@@ -132,6 +132,14 @@ main (void)
 //		printf("rPrec=%d\n",rPrec);
 //	}
 
+	double one, fpOne, currentOne;
+	int onePrec, oneExp;
+	one = 0.12345;
+	fpOne=doubleToFpanrWithPrec(0.12345,1);
+	onePrec = getPrecFromFpanrDouble(fpOne);
+	currentOne = fpanrToDouble(fpOne);
+	frexp(currentOne, &oneExp);
+	printVal(one, fpOne, currentOne, onePrec, 1, "one");
 	//	float f = 1.0/3.0;
 //	printf("\nbefore conversion : %e, after conversion : %e, after conversion of the conversion : %e\n",f,floatToFpanr(f),fpanrToFloat(floatToFpanr(f)));
 
