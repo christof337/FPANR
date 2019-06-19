@@ -1,7 +1,7 @@
 ACLOCAL_AMFLAGS=-I m4
 SUBDIRS=src/
 dist_bin_SCRIPTS=verificarlo
-
+CFLAGS= -g
 
 edit_script = $(SED) -e 's,%LIBDIR%,$(libdir),'g $(NULL)
 

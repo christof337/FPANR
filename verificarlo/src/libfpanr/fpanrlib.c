@@ -19,6 +19,7 @@
 // this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "ieee754.h"
 
@@ -67,6 +68,10 @@ void d_setPrec(double_st * fpanrDVal, int prec) {
 #endif
 	union ieee754_double d;
 	d.d = fpanrDVal->_value;
+	if(isnan(d.d) || isinf(d.d)) {
+		fprintf(stderr, "ISNAN|ISINF\n");
+		abort();
+	}
 
 	prec = MIN(PREC_MAX_DOUBLE, prec);
 
@@ -84,6 +89,10 @@ void d_setPrec(double_st * fpanrDVal, int prec) {
 		}
 	}
 	fpanrDVal->_value = d.d;
+	if(isnan(d.d) || isinf(d.d)) {
+		fprintf(stderr, "ISNAN|ISINF\n");
+		abort();
+	}
 }
 
 void d_setPrecMax(double_st * fpanrDVal) {
@@ -156,6 +165,10 @@ double d_getVal(const double_st fpanrDVal, int *prec) {
 		}
 	}
 	*prec = PREC_MAX_DOUBLE - c;
+	if(isnan(d.d) || isinf(d.d)) {
+		fprintf(stderr, "ISNAN|ISINF\n");
+		abort();
+	}
 	return (d.d);
 }
 
@@ -322,28 +335,50 @@ void d_exp(double_st * res, const double_st a) {
 	d_setPrec(res, p - log2(d_getVal(a, &p)));
 }
 
-void f_log(float_st * res, const float_st a) {
+double log2(double val) {
+  return log(val)/log(2);
+}
 
+void f_log(float_st * res, const float_st a) {
+  int p;
+  float val = f_getVal(a,&p);
+  res->_value = log(val);
+  f_setPrec(res,p+log2(log(val)));
 }
 
 void d_log(double_st * res, const double_st a) {
-
+  int p;
+  double val = d_getVal(a,&p);
+  res->_value = log(val);
+  d_setPrec(res,p+log2(log(val)));
 }
 
 void f_cos(float_st * res, const float_st a) {
-
+  int p;
+  float val = f_getVal(a,&p);
+  res->_value = cos(val);
+  f_setPrec(res, p+((log2(cos(val)/(val*sin(val))))));
 }
 
 void d_cos(double_st * res, const double_st a) {
-
+  int p;
+  double val = d_getVal(a,&p);
+  res->_value = cos(val);
+  d_setPrec(res, p+log2(cos(val)/(val*sin(val))));
 }
 
 void f_sin(float_st * res, const float_st a) {
-
+  int p;
+  float val = f_getVal(a,&p);
+  res->_value = sin(val);
+  f_setPrec(res, p+log2(sin(val)/(val*cos(val))));
 }
 
 void d_sin(double_st * res, const double_st a) {
-
+  int p;
+  double val = d_getVal(a,&p);
+  res->_value = sin(val);
+  d_setPrec(res, p+log2(sin(val)/(val*cos(val))));
 }
 
 /************************* FPHOOKS FUNCTIONS *************************
