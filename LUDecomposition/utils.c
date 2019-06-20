@@ -4,7 +4,15 @@
 #include<math.h>
 
 #include "utils.h"
+
 #include "libfpanrio.h"
+
+double myAbs(const double a) {
+  double_st res, val;
+  val._value = a;
+  d_fabs(&res, val);
+  return res._value;
+}
 
 // ---------------------------------------------------------------------------------------
 // 
@@ -63,6 +71,23 @@ void array_print (size_t x, double array[x])
 	printf("\n");
 }
 
+void array_copy(size_t n, double source[n], double dest[n]) {
+	for (size_t i = 0 ; i < n ; ++i) {
+		dest[i] = source[i];
+	}
+}
+
+// return the index of the first 1 encoutered
+int getOne(size_t n, double array[n]) {
+	int i = 0;
+	while ( i < n ) {
+		if (array[i] == 1.0) {
+			return i;
+		}
+		i++;
+	}
+}
+
 // ---------------------------------------------------------------------------------------
 // 
 // MATRICES
@@ -95,6 +120,27 @@ void matrix_fill (size_t x, size_t y, double matrix[x][y])
 		for(size_t j=0; j<y; ++j)
 		{
 			matrix[i][j] = 0;
+		}
+	}
+}
+
+/**
+ * Fills a permutation matrix with 1 on the diagonal and 0 elsewhere
+ * @param x number of lines
+ * @param y number of columns
+ * @param matrix the matrix to fill
+ */
+void permutation_matrix_fill (size_t x, size_t y, double matrix[x][y])
+{
+	for(size_t i=0; i<x; ++i)
+	{
+		for(size_t j=0; j<y; ++j)
+		{
+			if (i==j) {
+				matrix[i][j] = 1;
+			} else {
+				matrix[i][j] = 0;
+			}
 		}
 	}
 }
@@ -185,6 +231,19 @@ void arrayFillExp_fpanr(size_t x, double array[x]) {
 	}
 }
 
+
+// return the index of the first 1 encoutered
+int getOneFpanr(size_t n, double array[n]) {
+	int i = 0;
+	while ( i < n ) {
+		if (array[i] == dtfp(1.0)) {
+			return i;
+		}
+		i++;
+	}
+	return -1;
+}
+
 /**
  * Print an array to stdout in respect to FPANR output format, 
  * using fpanrDoubleToStr to retrieve the correct value AND the computed precision
@@ -217,6 +276,28 @@ void matrix_fill_fpanr (size_t x, size_t y, double matrix[x][y])
 		for(size_t j=0; j<y; ++j)
 		{
 			matrix[i][j] = dtfp(0.0);
+		}
+	}
+}
+
+/**
+ * Fills a permutation matrix with 1 on the diagonal and 0 elsewhere fpanr way
+ * https://stackoverflow.com/questions/42094465/correctly-allocating-multi-dimensional-arrays
+ * @param x
+ * @param y
+ * @param matrix
+ */
+void permutation_matrix_fill_fpanr (size_t x, size_t y, double matrix[x][y])
+{
+	for(size_t i=0; i<x; ++i)
+	{
+		for(size_t j=0; j<y; ++j)
+		{
+			if ( i == j ) {
+				matrix[i][j] = dtfp(1.0);
+			} else {
+				matrix[i][j] = dtfp(0.0);
+			}
 		}
 	}
 }
