@@ -319,6 +319,27 @@ void hilbert_fpanr(size_t x, size_t y, double matrix[x][y]) {
 }
 
 /**
+ * Multiply the matrix A with B and put the result in result fpanrway.
+ * @param n number of lines of A
+ * @param m number of columns of A and number of lines of B
+ * @param p number of columns of B
+ * @param result a pointer to the adress of an empty matrix that will be filled with the result of the multiplication
+ * @param A the first matrix in the product
+ * @param B the second matrix in the product
+ */
+void matrix_mult_fpanr(size_t n, size_t m, size_t p, double (**result)[n][p], double A[n][m], double B[m][p]) {
+	matrix_alloc(n,m,result);
+	for (int i=0; i<n; ++i) {
+		for (int j=0; j<p; ++j) {
+			(**result)[i][j]=dtfp(0.0);
+			for (int k=0; k<m; ++k) {
+				(**result)[i][j] += A[i][k]*B[k][j];
+			}
+		}
+	}
+}
+
+/**
  * Print a matrix to stdout
  * @param x number of lines
  * @param y number of columns

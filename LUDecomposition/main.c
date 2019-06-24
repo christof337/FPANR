@@ -74,6 +74,7 @@ int main(int argc, char *argv[])
         arrayFillExp(n,*B);
     }
 
+    // affichages initiaux
     printf("[A]: \n");
     if(isFpanr) {
         matrix_print_fpanr(n,n,*A);
@@ -99,8 +100,10 @@ int main(int argc, char *argv[])
     printf("\n\nFin du traitement...\n");
     fflush(stdout);
 
+    // résolution
     LUPSolve(n, *L, *U, *Y, *P, *B, *X, isFpanr);
 
+    // affichages finaux
     if(isFpanr) {
         printf("\n[L]: \n");
         matrix_print_fpanr(n,n,*L);
@@ -129,11 +132,12 @@ int main(int argc, char *argv[])
         printf("\n");
     }
     double (*test)[n][n];
-    matrix_mult(n, n, n, &test, *L, *U);
+    isFpanr?matrix_mult_fpanr(n,n,n,&test,*L,*U):matrix_mult(n, n, n, &test, *L, *U);
     isFpanr?matrix_print_fpanr(n,n,*test):matrix_print(n,n,*test);
+    free(*test);
 
     printf("\n");
-    matrix_mult(n, n, n, &test, *P, *A);
+    isFpanr?matrix_mult_fpanr(n,n,n,&test,*L,*U):matrix_mult(n, n, n, &test, *P, *A);
     isFpanr?matrix_print_fpanr(n,n,*test):matrix_print(n,n,*test);
 
     free(A);

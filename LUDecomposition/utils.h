@@ -37,6 +37,7 @@ void array_print_fpanr (size_t x, double array[x]);
 void matrix_fill_fpanr (size_t x, size_t y, double matrix[x][y]);
 void permutation_matrix_fill_fpanr (size_t x, size_t y, double matrix[x][y]);
 void hilbert_fpanr(size_t x, size_t y, double matrix[x][y]) ;
+void matrix_mult_fpanr(size_t n, size_t m, size_t p, double (**result)[n][p], double A[n][m], double B[m][p]);
 void matrix_print_fpanr (size_t x, size_t y, double matrix[x][y]);
 
 #endif // UTILS_H
