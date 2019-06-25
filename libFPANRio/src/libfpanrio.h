@@ -28,12 +28,16 @@ float floatToFpanr(const float floatVal);
 float floatToFpanrWithPrec(const float floatVal, const int prec);
 unsigned getPrecFromFpanrFloat(const float floatVal);
 char * fpanrFloatToStr(const float fpanrVal);
+int fpanrFVecToFile(const size_t n, const float array[n], const char * fileName);
+int fpanrFMatToFile(const size_t n, const size_t m, const float matrix[n][m], const char * fileName);
 
 double fpanrToDouble(const double fpanrVal);
 double doubleToFpanr(const double doubleVal);
 double doubleToFpanrWithPrec(const double doubleVal, const int prec);
 unsigned getPrecFromFpanrDouble(const double doubleVal);
 char * fpanrDoubleToStr(const double fpanrVal);
+int fpanrDVecToFile(const size_t n, const double array[n], const char * fileName);
+int fpanrDMatToFile(const size_t n, const size_t m, const double matrix[n][m], const char * fileName);
 
 unsigned count_trailing_zeros(const unsigned long n) ;
 void f_setPrec(float_st * _this, int prec) ;

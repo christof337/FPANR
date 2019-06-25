@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "ieee754.h"
 
@@ -97,6 +98,58 @@ char * fpanrFloatToStr(const float fpanrVal) {
     return buffer;
 }
 
+int fpanrFVecToFile(const size_t n, const float array[n], const char * fileName) {
+	FILE *fp;
+
+	fp = fopen(fileName, "w");
+	for(size_t i = 0 ; i < n ; ++i ) {
+		fprintf(fp, "%f\n",fpanrToFloat(array[i]));
+	}
+
+	fclose(fp);
+
+	// writing precisions
+	char * str = malloc((strlen(fileName)+strlen(".prec")) * sizeof(char));
+	strcpy(str,fileName);
+	strcat(str, ".prec");
+	fp = fopen(str, "w");
+	for(size_t i = 0 ; i < n ; ++i ) {
+		fprintf(fp, "%d\n",getPrecFromFpanrFloat(array[i]));
+	}
+
+	free(str);
+	fclose(fp);
+}
+
+int fpanrFMatToFile(const size_t n, const size_t m, const float matrix[n][m], const char * fileName) {
+	FILE *fp;
+
+	fp = fopen(fileName, "w");
+	for(size_t i = 0 ; i < n ; ++i ) {
+		for ( size_t j = 0 ; j < m ; ++j ) {
+			fprintf(fp, "%f\t",fpanrToFloat(matrix[i][j]));
+		}
+		fprintf(fp,"\n");
+	}
+
+	fclose(fp);
+
+	// writing precisions
+	char * str = malloc((strlen(fileName)+strlen(".prec")) * sizeof(char));
+	strcpy(str,fileName);
+	strcat(str, ".prec");
+	fp = fopen(str, "w");
+	for(size_t i = 0 ; i < n ; ++i ) {
+		for ( size_t j = 0 ; j < m ; ++j ) {
+			fprintf(fp, "%d\t",getPrecFromFpanrFloat(matrix[i][j]));
+		}
+		fprintf(fp,"\n");
+	}
+
+	free(str);
+	fclose(fp);
+}
+
 // --------------
 //    double
 // --------------
@@ -150,6 +203,58 @@ char * fpanrDoubleToStr(const double fpanrVal) {
     char  *buffer = malloc(needed+1);
     sprintf(buffer, "%g (%d)", val, p);
     return buffer;
+}
+
+int fpanrDVecToFile(const size_t n, const double array[n], const char * fileName) {
+	FILE *fp;
+
+	fp = fopen(fileName, "w");
+	for(size_t i = 0 ; i < n ; ++i ) {
+		fprintf(fp, "%f\n",fpanrToDouble(array[i]));
+	}
+
+	fclose(fp);
+
+	// writing precisions
+	char * str = malloc((strlen(fileName)+strlen(".prec")) * sizeof(char));
+	strcpy(str,fileName);
+	strcat(str, ".prec");
+	fp = fopen(str, "w");
+	for(size_t i = 0 ; i < n ; ++i ) {
+		fprintf(fp, "%d\n",getPrecFromFpanrDouble(array[i]));
+	}
+
+	free(str);
+	fclose(fp);
+}
+
+int fpanrDMatToFile(const size_t n, const size_t m, const double matrix[n][m], const char * fileName) {
+	FILE *fp;
+
+	fp = fopen(fileName, "w");
+	for(size_t i = 0 ; i < n ; ++i ) {
+		for ( size_t j = 0 ; j < m ; ++j ) {
+			fprintf(fp, "%f\t",fpanrToDouble(matrix[i][j]));
+		}
+		fprintf(fp,"\n");
+	}
+
+	fclose(fp);
+
+	// writing precisions
+	char * str = malloc((strlen(fileName)+strlen(".prec")) * sizeof(char));
+	strcpy(str,fileName);
+	strcat(str, ".prec");
+	fp = fopen(str, "w");
+	for(size_t i = 0 ; i < n ; ++i ) {
+		for ( size_t j = 0 ; j < m ; ++j ) {
+			fprintf(fp, "%d\t",getPrecFromFpanrDouble(matrix[i][j]));
+		}
+		fprintf(fp,"\n");
+	}
+
+	free(str);
+	fclose(fp);
 }
 
 // --------------------------------------
