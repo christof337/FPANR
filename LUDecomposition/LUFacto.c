@@ -9,12 +9,137 @@
 #include "libfpanrio.h"
 
 
+int computeMatrix(size_t n, short int isFpanr) {
+    // déclarations
+    int i,j,k;
+    double (*A)[n][n], (*L)[n][n], (*U)[n][n], (*P)[n][n];
+    double (*B)[n], (*X)[n], (*Y)[n];
+
+    // allocations
+    matrix_alloc(n, n, &A);
+    matrix_alloc(n, n, &L);
+    matrix_alloc(n, n, &U);
+    matrix_alloc(n,n,&P);
+    array_alloc(n,&B);
+    array_alloc(n,&X);
+    array_alloc(n,&Y);
+
+    // initialisations
+    if(isFpanr) {
+        matrix_fill_fpanr(n,n,*A);
+        matrix_fill_fpanr(n,n,*L);
+        matrix_fill_fpanr(n,n,*U);
+        permutation_matrix_fill_fpanr(n,n,*P);   // filling permutation matrix with zeros
+        array_fill_fpanr(n, *B);
+        array_fill_fpanr(n, *X);
+        array_fill_fpanr(n, *Y);
+    }else {
+        matrix_fill(n,n,*A);
+        matrix_fill(n,n,*L);
+        matrix_fill(n,n,*U);
+        permutation_matrix_fill(n, n, *P);  // filling permutation matrix with zeros
+        array_fill(n, *B);
+        array_fill(n, *X);
+        array_fill(n, *Y);   
+    }
+
+    // remplissage
+    if(isFpanr) {
+        hilbert_fpanr(n,n,*A);
+        arrayFillExp_fpanr(n,*B);
+    } else {
+        hilbert(n,n,*A);
+        arrayFillExp(n,*B);
+    }
+
+    // affichages initiaux
+    printf("[A]: \n");
+    if(isFpanr) {
+        matrix_print_fpanr(n,n,*A);
+    } else {
+        matrix_print(n,n,*A);
+    }
+    printf("\n\n[B]: \n");
+    if(isFpanr) {
+        array_print_fpanr(n,*B);
+    } else {
+        array_print(n,*B);
+    }
+
+    printf("\n\nDébut du traitement...\n");
+    printf(isFpanr?"Using FPANR\n":"");
+    fflush(stdout);
+
+    /* ------------------------------- */
+    /*      LU decomposition call      */
+    LU_decomposition(n, *U, *A, *L, isFpanr, *P);
+    /* ------------------------------- */
+
+    printf("\n\nFin du traitement...\n");
+    fflush(stdout);
+
+    // résolution
+    LUPSolve(n, *L, *U, *Y, *P, *B, *X, isFpanr);
+
+    // affichages finaux
+    if(isFpanr) {
+        printf("\n[L]: \n");
+        matrix_print_fpanr(n,n,*L);
+        printf("\nstep1");
+        fflush(stdout);
+        fpanrDMatToFile(n, n, *L, "output/L.dat");
+
+        printf("\n\n[U]: \n");
+        matrix_print_fpanr(n,n,*U);
+        fpanrDMatToFile(n, n, *U, "output/U.dat");
+
+        printf("\n\n[Y]: \n");
+        array_print_fpanr(n,*Y);
+        fpanrDVecToFile(n, *Y, "output/Y.dat");
+
+        printf("\n\n[X]: \n");
+        array_print_fpanr(n,*X);
+        fpanrDVecToFile(n, *X, "output/X.dat");
+        printf("\n");
+    } else {
+        printf("\n[L]: \n");
+        matrix_print(n,n,*L);
+
+        printf("\n\n[U]: \n");
+        matrix_print(n,n,*U);
+
+        printf("\n\n[Y]: \n");
+        array_print(n,*Y);
+
+        printf("\n\n[X]: \n");
+        array_print(n,*X);
+        printf("\n");
+    }
+    double (*test)[n][n];
+    isFpanr?matrix_mult_fpanr(n,n,n,&test,*L,*U):matrix_mult(n, n, n, &test, *L, *U);
+    isFpanr?matrix_print_fpanr(n,n,*test):matrix_print(n,n,*test);
+    free(*test);
+
+    printf("\n");
+    isFpanr?matrix_mult_fpanr(n,n,n,&test,*L,*U):matrix_mult(n, n, n, &test, *P, *A);
+    isFpanr?matrix_print_fpanr(n,n,*test):matrix_print(n,n,*test);
+
+    free(A);
+    free(L);
+    free(U);
+    free(B);
+    free(X);
+    free(Y);
+    free(test);
+
+    return 0;
+}
 
 /**
  * LU Decomposition
  * TODO : need to find the best pivoting strategy
 **/
-void LU_decomposition(const size_t n, double U[n][n], double A[n][n], double L[n][n], int isFpanr, double P[n][n]) {
+void LU_decomposition(const size_t n, double U[n][n], double A[n][n], double L[n][n], short int isFpanr, double P[n][n]) {
     int nbPivots = n;
     for(int j=0; j<n; ++j)
     {
@@ -52,7 +177,7 @@ void LU_decomposition(const size_t n, double U[n][n], double A[n][n], double L[n
  *        containing column indexes where the permutation matrix has "1". The last element P[N]=S+N, 
  *        where S is the number of row exchanges needed for determinant computation, det(P)=(-1)^S    
  */
-int LUPivot(int n, double A[n][n], /*double tol,*/ double P[n][n], int currentRow, int isFpanr) {
+int LUPivot(int n, double A[n][n], /*double tol,*/ double P[n][n], int currentRow, short int isFpanr) {
     int i, j, k, imax; 
     double maxA, ptr[n], absA;
     int hasPivoted = 0;
@@ -101,7 +226,7 @@ int LUPivot(int n, double A[n][n], /*double tol,*/ double P[n][n], int currentRo
 /* INPUT: A,P filled in LUPDecompose; b - rhs vector; N - dimension
  * OUTPUT: x - solution vector of A*x=b
  */
-void LUPSolve(size_t n, double L[n][n], double U[n][n], double Y[n], double P[n][n], double B[n], double X[n], int isFpanr) {
+void LUPSolve(size_t n, double L[n][n], double U[n][n], double Y[n], double P[n][n], double B[n], double X[n], short int isFpanr) {
     int i,j;
     for(i=0; i<n; ++i) {
         int permutedIndex = isFpanr?getOneFpanr(n,P[i]):getOne(n,P[i]);
@@ -122,7 +247,7 @@ void LUPSolve(size_t n, double L[n][n], double U[n][n], double Y[n], double P[n]
 /* INPUT: A,P filled in LUPDecompose; N - dimension
  * OUTPUT: IA is the inverse of the initial matrix
  */
-void LUPInvert(int n, double U[n][n], double L[n][n], double P[n][n], double IA[n][n], int isFpanr) {
+void LUPInvert(int n, double U[n][n], double L[n][n], double P[n][n], double IA[n][n], short int isFpanr) {
     for (int j = 0; j < n; j++) {
         for (int i = 0; i < n; i++) {
             int permut = isFpanr?getOneFpanr(n,P[i]):getOne(n,P[i]);
