@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<math.h>
 //#include<conio.h>
 
 #include "LUFacto.h"
@@ -8,8 +9,11 @@
 #include "utils.h"
 #include "libfpanrio.h"
 
+// #define WRITE_X_IN_FILE
+// #define WRITE_Y_IN_FILE
+#define DEBUG 0
 
-int computeMatrix(size_t n, short int isFpanr) {
+int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRATEGY strategy) {
     // déclarations
     int i,j,k;
     double (*A)[n][n], (*L)[n][n], (*U)[n][n], (*P)[n][n];
@@ -81,23 +85,37 @@ int computeMatrix(size_t n, short int isFpanr) {
     // résolution
     LUPSolve(n, *L, *U, *Y, *P, *B, *X, isFpanr);
 
+    char * fileName;
     // affichages finaux
     if(isFpanr) {
         printf("\n[L]: \n");
         matrix_print_fpanr(n,n,*L);
-        fpanrDMatToFile(n, n, *L, "output/L.dat");
+        fileName = buildFileName(OM_L, n, index, strategy);
+        fpanrDMatToFile(n, n, *L, fileName);
+        free(fileName);
 
         printf("\n\n[U]: \n");
         matrix_print_fpanr(n,n,*U);
-        fpanrDMatToFile(n, n, *U, "output/U.dat");
+        fileName = buildFileName(OM_U, n, index, strategy);
+        fpanrDMatToFile(n, n, *U, fileName);
+        free(fileName);
 
+#ifdef WRITE_Y_IN_FILE
         printf("\n\n[Y]: \n");
         array_print_fpanr(n,*Y);
-        fpanrDVecToFile(n, *Y, "output/Y.dat");
+        fileName = buildFileName(OM_Y, n, index, strategy);
+        fpanrDVecToFile(n, *Y, fileName);
+        free(fileName);
+#endif // WRITE_Y_IN_FILE
 
+#ifdef WRITE_X_IN_FILE
         printf("\n\n[X]: \n");
         array_print_fpanr(n,*X);
-        fpanrDVecToFile(n, *X, "output/X.dat");
+        fileName = buildFileName(OM_X, n, index, strategy);
+        fpanrDVecToFile(n, *X, fileName);
+        free(fileName);
+#endif // WRITE_X_IN_FILE
+
         printf("\n");
     } else {
         printf("\n[L]: \n");
@@ -113,6 +131,7 @@ int computeMatrix(size_t n, short int isFpanr) {
         array_print(n,*X);
         printf("\n");
     }
+#if DEBUG
     double (*test)[n][n];
     isFpanr?matrix_mult_fpanr(n,n,n,&test,*L,*U):matrix_mult(n, n, n, &test, *L, *U);
     isFpanr?matrix_print_fpanr(n,n,*test):matrix_print(n,n,*test);
@@ -122,13 +141,15 @@ int computeMatrix(size_t n, short int isFpanr) {
     isFpanr?matrix_mult_fpanr(n,n,n,&test,*L,*U):matrix_mult(n, n, n, &test, *P, *A);
     isFpanr?matrix_print_fpanr(n,n,*test):matrix_print(n,n,*test);
 
+    free(test);
+#endif // DEBUG
+
     free(A);
     free(L);
     free(U);
     free(B);
     free(X);
     free(Y);
-    free(test);
 
     return 0;
 }
@@ -280,4 +301,50 @@ double LUPDeterminant(size_t n, double A[n][n], int nbPivots) {
         return det; 
     else
         return -det;
+}
+
+#define FILE_FOLDER "output"
+#define MAX_FILE_NAME_LENGTH 100
+#define FILE_NAME_SUFFIX ".dat"
+
+char * buildFileName(enum OUTPUT_MATRIX OM, size_t n, short int index, enum PIVOT_STRATEGY strategy) {
+    char * res;
+    char buffer[20];
+
+    res = malloc(MAX_FILE_NAME_LENGTH * sizeof(char));
+
+    // sample file name : U1_n4_MAX.dat
+    strcpy(res, FILE_FOLDER);
+
+    strcat(res, "/");
+
+    append(res, OM);
+
+    if(index == -1) {
+        sprintf(buffer, "ref");
+    } else {
+        sprintf(buffer, "%hi", index);
+    }
+    strcat(res, buffer);
+
+    strcat(res, "_n");
+
+    sprintf(buffer, "%zu", n);
+    strcat(res, buffer);
+
+    strcat(res, "_");
+
+    switch(strategy) {
+        case PS_MAX:
+            strcat(res, "MAX");
+            break;
+        case PS_MAX_PRECISION:
+            strcat(res, "MAX_PREC");
+            break;
+        default:
+            break;
+    }
+    strcat(res, FILE_NAME_SUFFIX);
+
+    return res;
 }

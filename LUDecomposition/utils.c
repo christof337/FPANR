@@ -2,6 +2,7 @@
 #include<stdlib.h>
 #include<assert.h>
 #include<math.h>
+#include<string.h>
 
 #include "utils.h"
 
@@ -86,6 +87,8 @@ int getOne(size_t n, double array[n]) {
 		}
 		i++;
 	}
+
+	return -1;
 }
 
 // ---------------------------------------------------------------------------------------
@@ -357,4 +360,11 @@ void matrix_print_fpanr (size_t x, size_t y, double matrix[x][y])
 		}
 		printf("\n");
 	}
+}
+
+void append(char* s, char c)
+{
+        int len = strlen(s);
+        s[len] = c;
+        s[len+1] = '\0';
 }
