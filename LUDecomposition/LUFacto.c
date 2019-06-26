@@ -85,8 +85,6 @@ int computeMatrix(size_t n, short int isFpanr) {
     if(isFpanr) {
         printf("\n[L]: \n");
         matrix_print_fpanr(n,n,*L);
-        printf("\nstep1");
-        fflush(stdout);
         fpanrDMatToFile(n, n, *L, "output/L.dat");
 
         printf("\n\n[U]: \n");
