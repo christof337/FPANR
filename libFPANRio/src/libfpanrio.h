@@ -10,6 +10,8 @@
 
 #include "ieee754.h"
 
+#define DELIM '\t'
+
 struct mca_interface_t;
 extern struct mca_interface_t fpanr_interface;
 
@@ -30,6 +32,8 @@ unsigned getPrecFromFpanrFloat(const float floatVal);
 char * fpanrFloatToStr(const float fpanrVal);
 int fpanrFVecToFile(const size_t n, const float array[n], const char * fileName);
 int fpanrFMatToFile(const size_t n, const size_t m, const float matrix[n][m], const char * fileName);
+int fpanrFileToFVec(const size_t n, float array[n], const char * fileName);
+int fpanrFileToFMat(const size_t n, const size_t m, float matrix[n][m], const char * fileName);
 
 double fpanrToDouble(const double fpanrVal);
 double doubleToFpanr(const double doubleVal);
@@ -38,6 +42,8 @@ unsigned getPrecFromFpanrDouble(const double doubleVal);
 char * fpanrDoubleToStr(const double fpanrVal);
 int fpanrDVecToFile(const size_t n, const double array[n], const char * fileName);
 int fpanrDMatToFile(const size_t n, const size_t m, const double matrix[n][m], const char * fileName);
+int fpanrFileToDVec(const size_t n, double array[n], const char * fileName);
+int fpanrFileToDMat(const size_t n, const size_t m, double matrix[n][m], const char * fileName);
 
 unsigned count_trailing_zeros(const unsigned long n) ;
 void f_setPrec(float_st * _this, int prec) ;

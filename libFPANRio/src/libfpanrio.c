@@ -24,6 +24,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <float.h>
 
 #include "ieee754.h"
 
@@ -43,6 +44,26 @@
  * Switch DEBUG to 1 if you want to have a verbose output.
  */
 #define DEBUG 0
+
+#ifdef DBL_DECIMAL_DIG
+  #define OP_DBL_Digs (DBL_DECIMAL_DIG)
+#else  
+  #ifdef DECIMAL_DIG
+    #define OP_DBL_Digs (DECIMAL_DIG)
+  #else  
+    #define OP_DBL_Digs (DBL_DIG + 3)
+  #endif
+#endif
+
+#ifdef FLT_DECIMAL_DIG
+  #define OP_FLT_Digs (FLT_DECIMAL_DIG)
+#else  
+  #ifdef DECIMAL_DIG
+    #define OP_FLT_Digs (DECIMAL_DIG)
+  #else  
+    #define OP_FLT_Digs (FLT_DIG + 3)
+  #endif
+#endif
 
 // --------------------------------------
 
@@ -90,12 +111,36 @@ unsigned getPrecFromFpanrFloat(const float floatVal) {
 }
 
 char * fpanrFloatToStr(const float fpanrVal) {
+	int Digs = OP_FLT_Digs;
 	int p = getPrecFromFpanrFloat(fpanrVal);
 	float val = fpanrToFloat(fpanrVal);
-    size_t needed = snprintf(NULL, 0, "%g (%d)", val, p);
-    char  *buffer = malloc(needed+1);
-    sprintf(buffer, "%g (%d)", val, p);
-    return buffer;
+	size_t needed = snprintf(NULL, 0, "%*.e (%d)", Digs, val, p);
+	char  *buffer = malloc(needed+1);
+	sprintf(buffer, "%.*e (%d)", Digs, val, p);
+	return buffer;
+}
+
+int countLines(FILE * fp) {
+	char ch;
+	int cpt = 0;
+	while((ch = fgetc(fp)) != EOF) {
+		fflush(stdout);
+		if(ch=='\n') {
+			cpt++;
+		}
+	}
+	return cpt;
+}
+
+int countColumns(FILE * fp) {
+	char ch;
+	int cpt = 0;
+	while((ch = fgetc(fp)) != '\n') {
+		if(ch == DELIM) {
+			cpt++;
+		}
+	}
+	return cpt;
 }
 
 int fpanrFVecToFile(const size_t n, const float array[n], const char * fileName) {
@@ -119,6 +164,29 @@ int fpanrFVecToFile(const size_t n, const float array[n], const char * fileName)
 
 	free(str);
 	fclose(fp);
+
+ 	// works
+    /*int Digs = OP_FLT_Digs;
+    double OneSeventh = 1.0/10.0;
+    printf("%.*e (%e)\n", Digs, OneSeventh, OneSeventh*20.0);
+    char str[60];
+    sprintf(str,"%.*e",Digs,OneSeventh);
+    double test;
+    sscanf(str,"%le",&test);
+    printf("%.*e (%e)",Digs,test,test*20.0);*/
+
+	// writing both
+	int Digs = OP_FLT_Digs;
+	str = malloc((strlen(fileName)+strlen(".fpanr")) * sizeof(char));
+	strcpy(str,fileName);
+	strcat(str, ".fpanr");
+	fp = fopen(str, "w");
+	for(size_t i = 0 ; i < n ; ++i ) {
+		fprintf(fp, "%.*e (%d)%c",Digs,fpanrToFloat(array[i]),getPrecFromFpanrFloat(array[i]),DELIM);
+	}
+
+	free(str);
+	fclose(fp);
 }
 
 int fpanrFMatToFile(const size_t n, const size_t m, const float matrix[n][m], const char * fileName) {
@@ -127,7 +195,7 @@ int fpanrFMatToFile(const size_t n, const size_t m, const float matrix[n][m], co
 	fp = fopen(fileName, "w");
 	for(size_t i = 0 ; i < n ; ++i ) {
 		for ( size_t j = 0 ; j < m ; ++j ) {
-			fprintf(fp, "%f\t",fpanrToFloat(matrix[i][j]));
+			fprintf(fp, "%f%c",fpanrToFloat(matrix[i][j]),DELIM);
 		}
 		fprintf(fp,"\n");
 	}
@@ -141,7 +209,22 @@ int fpanrFMatToFile(const size_t n, const size_t m, const float matrix[n][m], co
 	fp = fopen(str, "w");
 	for(size_t i = 0 ; i < n ; ++i ) {
 		for ( size_t j = 0 ; j < m ; ++j ) {
-			fprintf(fp, "%d\t",getPrecFromFpanrFloat(matrix[i][j]));
+			fprintf(fp, "%d%c",getPrecFromFpanrFloat(matrix[i][j]),DELIM);
+		}
+		fprintf(fp,"\n");
+	}
+
+	free(str);
+	fclose(fp);
+	// writing both
+	int Digs = OP_FLT_Digs;
+	str = malloc((strlen(fileName)+strlen(".fpanr")) * sizeof(char));
+	strcpy(str,fileName);
+	strcat(str, ".fpanr");
+	fp = fopen(str, "w");
+	for(size_t i = 0 ; i < n ; ++i ) {
+		for ( size_t j = 0 ; j < m ; ++j ) {
+			fprintf(fp, "%d%c",getPrecFromFpanrFloat(matrix[i][j]),DELIM);
 		}
 		fprintf(fp,"\n");
 	}
@@ -149,6 +232,74 @@ int fpanrFMatToFile(const size_t n, const size_t m, const float matrix[n][m], co
 	free(str);
 	fclose(fp);
 }
+
+
+int fpanrFileToFVec(const size_t n, float array[n], const char * fileName) {
+	FILE *fp;
+	int cpt;
+	float val;
+	int prec;
+	int nbParsed;
+
+	fp = fopen(fileName, "r");
+	if (fp == NULL) {
+		fprintf(stderr, "Error while opening file %s", fileName);
+		return -1;
+	}
+	for ( int i = 0 ; i < n ; ++i ) {
+		nbParsed = fscanf(fp,"%e (%d)",&val,&prec);
+		if (nbParsed > 1) 
+			array[i] = floatToFpanrWithPrec(val, prec);
+	}
+
+	fclose(fp);
+
+	return 0;
+}
+
+int fpanrFileToFMat(const size_t n, const size_t m, float matrix[n][m], const char * fileName) {
+	FILE *fp;
+	int cpt, prec, nbParsed;
+	float val;
+
+	fp = fopen(fileName, "r");
+	if (fp == NULL) {
+		fprintf(stderr, "Error while opening file %s", fileName);
+		return -1;
+	}
+
+	int maxLength = m*(20+OP_FLT_Digs);
+	char * str = malloc(sizeof(char) * maxLength);
+	char * token, s[2];
+	s[0]=DELIM;
+	s[1]='\0';
+
+	for ( size_t i = 0 ; i < n ; ++i ) {
+		str = malloc(sizeof(char) * maxLength);
+		token = fgets(str, maxLength, fp);
+		if (token == str) {
+			token = strtok(str, s);
+
+			cpt = 0;
+	   		/* walk through other tokens */
+			while( token != NULL ) {
+				nbParsed = sscanf(token,"%e (%d)",&val, &prec);
+
+				if(nbParsed>1) {
+					matrix[i][cpt] = floatToFpanrWithPrec(val, prec);
+				}
+
+				token = strtok(NULL, s);
+				cpt++;
+			}
+		}
+
+		free(str);
+	}
+
+	return 0;
+}
+
 
 // --------------
 //    double
@@ -196,13 +347,15 @@ unsigned getPrecFromFpanrDouble(const double doubleVal) {
 	return d_getPrec(fpanrVal);
 }
 
-char * fpanrDoubleToStr(const double fpanrVal) {	
+char * fpanrDoubleToStr(const double fpanrVal) {
+	// writing both	
+	int Digs = OP_DBL_Digs;
 	int p = getPrecFromFpanrDouble(fpanrVal);
 	double val = fpanrToDouble(fpanrVal);
-    size_t needed = snprintf(NULL, 0, "%g (%d)", val, p);
-    char  *buffer = malloc(needed+1);
-    sprintf(buffer, "%g (%d)", val, p);
-    return buffer;
+	size_t needed = snprintf(NULL, 0, "%.*e (%d)", Digs, val, p);
+	char  *buffer = malloc(needed+1);
+	sprintf(buffer, "%.*e (%d)", Digs, val, p);
+	return buffer;
 }
 
 int fpanrDVecToFile(const size_t n, const double array[n], const char * fileName) {
@@ -226,6 +379,19 @@ int fpanrDVecToFile(const size_t n, const double array[n], const char * fileName
 
 	free(str);
 	fclose(fp);
+
+	// writing both	
+	int Digs = OP_DBL_Digs;
+	str = malloc((strlen(fileName)+strlen(".fpanr")) * sizeof(char));
+	strcpy(str,fileName);
+	strcat(str, ".fpanr");
+	fp = fopen(str, "w");
+	for(size_t i = 0 ; i < n ; ++i ) {
+		fprintf(fp, "%.*e (%d)\n",Digs,fpanrToDouble(array[i]),getPrecFromFpanrDouble(array[i]));
+	}
+
+	free(str);
+	fclose(fp);
 }
 
 int fpanrDMatToFile(const size_t n, const size_t m, const double matrix[n][m], const char * fileName) {
@@ -234,7 +400,7 @@ int fpanrDMatToFile(const size_t n, const size_t m, const double matrix[n][m], c
 	fp = fopen(fileName, "w");
 	for(size_t i = 0 ; i < n ; ++i ) {
 		for ( size_t j = 0 ; j < m ; ++j ) {
-			fprintf(fp, "%f\t",fpanrToDouble(matrix[i][j]));
+			fprintf(fp, "%f%c",fpanrToDouble(matrix[i][j]),DELIM);
 		}
 		fprintf(fp,"\n");
 	}
@@ -248,13 +414,98 @@ int fpanrDMatToFile(const size_t n, const size_t m, const double matrix[n][m], c
 	fp = fopen(str, "w");
 	for(size_t i = 0 ; i < n ; ++i ) {
 		for ( size_t j = 0 ; j < m ; ++j ) {
-			fprintf(fp, "%d\t",getPrecFromFpanrDouble(matrix[i][j]));
+			fprintf(fp, "%d%c",getPrecFromFpanrDouble(matrix[i][j]),DELIM);
 		}
 		fprintf(fp,"\n");
 	}
 
 	free(str);
 	fclose(fp);
+
+	// writing both	
+	int Digs = OP_DBL_Digs;
+	str = malloc((strlen(fileName)+strlen(".fpanr")) * sizeof(char));
+	strcpy(str,fileName);
+	strcat(str, ".fpanr");
+	fp = fopen(str, "w");
+	for(size_t i = 0 ; i < n ; ++i ) {
+		for ( size_t j = 0 ; j < m ; ++j ) {
+			fprintf(fp, "%.*e (%d)%c",Digs,fpanrToDouble(matrix[i][j]),getPrecFromFpanrDouble(matrix[i][j]),DELIM);
+		}
+		fprintf(fp,"\n");
+	}
+
+	free(str);
+	fclose(fp);
+}
+
+int fpanrFileToDVec(const size_t n, double array[n], const char * fileName) {
+	FILE *fp;
+	int cpt;
+	double val;
+	int prec;
+	int nbParsed;
+
+	fp = fopen(fileName, "r");
+	if (fp == NULL) {
+		fprintf(stderr, "Error while opening file %s", fileName);
+		return -1;
+	}
+
+	for ( int i = 0 ; i < n ; ++i ) {
+		nbParsed = fscanf(fp,"%le (%d)",&val,&prec);
+		if ( nbParsed > 1 ) 
+			array[i] = doubleToFpanrWithPrec(val, prec);
+	}
+
+	fclose(fp);
+
+	return 0;
+}
+
+int fpanrFileToDMat(const size_t n, const size_t m, double matrix[n][m], const char * fileName) {
+	FILE *fp;
+	int cpt, prec, nbParsed;
+	double val;
+
+	fp = fopen(fileName, "r");
+	if (fp == NULL) {
+		fprintf(stderr, "Error while opening file %s", fileName);
+		return -1;
+	}
+
+	int maxLength = m*(20+OP_DBL_Digs);
+	char * str;
+	char * token, s[2];
+	s[0]=DELIM;
+	s[1]='\0';
+
+	for ( size_t i = 0 ; i < n ; ++i ) {
+		str = malloc(sizeof(char) * maxLength);
+		token = fgets(str, maxLength, fp);
+		if (token == str) {
+			token = strtok(str, s);
+
+			cpt = 0;
+	   		/* walk through other tokens */
+			while( token != NULL ) {
+				nbParsed = sscanf(token,"%le (%d)",&val, &prec);
+
+				if(nbParsed>1) {
+					matrix[i][cpt] = doubleToFpanrWithPrec(val, prec);
+				}
+
+				token = strtok(NULL, s);
+				cpt++;
+			}
+		}
+
+		free(str);
+	}
+
+	fclose(fp);
+
+	return 0;
 }
 
 // --------------------------------------
@@ -436,56 +687,56 @@ void d_exp(double_st * res, const double_st a) {
 }
 
 double log2(double val) {
-  return log(val)/log(2);
+	return log(val)/log(2);
 }
 
 void f_log(float_st * res, const float_st a) {
-  int p;
-  float val = f_getVal(a,&p);
-  res->_value = log(val);
-  f_setPrec(res,p+log2(log(val)));
+	int p;
+	float val = f_getVal(a,&p);
+	res->_value = log(val);
+	f_setPrec(res,p+log2(log(val)));
 }
 
 void d_log(double_st * res, const double_st a) {
-  int p;
-  fflush(stdout);
-  double val = d_getVal(a,&p);
-  fflush(stdout);
+	int p;
+	fflush(stdout);
+	double val = d_getVal(a,&p);
+	fflush(stdout);
 
-  res->_value = log(val);
-  fflush(stdout);
+	res->_value = log(val);
+	fflush(stdout);
 
-  d_setPrec(res,p+log2(log(val)));
-  fflush(stdout);
+	d_setPrec(res,p+log2(log(val)));
+	fflush(stdout);
 
 }
 
 void f_cos(float_st * res, const float_st a) {
-  int p;
-  float val = f_getVal(a,&p);
-  res->_value = cos(val);
-  f_setPrec(res, p+((log2(cos(val)/(val*sin(val))))));
+	int p;
+	float val = f_getVal(a,&p);
+	res->_value = cos(val);
+	f_setPrec(res, p+((log2(cos(val)/(val*sin(val))))));
 }
 
 void d_cos(double_st * res, const double_st a) {
-  int p;
-  double val = d_getVal(a,&p);
-  res->_value = cos(val);
-  d_setPrec(res, p+log2(cos(val)/(val*sin(val))));
+	int p;
+	double val = d_getVal(a,&p);
+	res->_value = cos(val);
+	d_setPrec(res, p+log2(cos(val)/(val*sin(val))));
 }
 
 void f_sin(float_st * res, const float_st a) {
-  int p;
-  float val = f_getVal(a,&p);
-  res->_value = sin(val);
-  f_setPrec(res, p+log2(sin(val)/(val*cos(val))));
+	int p;
+	float val = f_getVal(a,&p);
+	res->_value = sin(val);
+	f_setPrec(res, p+log2(sin(val)/(val*cos(val))));
 }
 
 void d_sin(double_st * res, const double_st a) {
-  int p;
-  double val = d_getVal(a,&p);
-  res->_value = sin(val);
-  d_setPrec(res, p+log2(sin(val)/(val*cos(val))));
+	int p;
+	double val = d_getVal(a,&p);
+	res->_value = sin(val);
+	d_setPrec(res, p+log2(sin(val)/(val*cos(val))));
 }
 
 
