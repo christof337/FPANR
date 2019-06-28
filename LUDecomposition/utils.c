@@ -436,12 +436,9 @@ void perturbateMatrix_fpanr(const size_t n, const size_t m, double A[n][n], cons
 
 	for ( size_t i = 0 ; i < n ; ++i ) {
 		for ( size_t j = 0 ; j < m ; ++j ) {
-			printf("\nbefore : %2.31f",fpanrToDouble(A[i][j]));
 			sign = getRandomValue(DEFAULT_RANDOM_RANGE); // 0 or 1
 			val = dtfp(2*sign - 1) ; // -1 or 1
 			A[i][j] += (val * perturbation);
-			printf("\nperturbationStage : %d, perturbation : %2.31f, sign : %d, val : %f, val*perturbation : %2.31f",perturbationStage, perturbation, sign, val, val*perturbation);
-			printf("\nafter : %2.31f",fpanrToDouble(A[i][j]));
 		}
 	}
 }
