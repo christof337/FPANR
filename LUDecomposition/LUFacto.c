@@ -9,6 +9,7 @@
 #include "utils.h"
 #include "libfpanrio.h"
 
+
 // #define WRITE_X_IN_FILE
 // #define WRITE_Y_IN_FILE
 #define WRITE_A_INV_IN_FILE
@@ -18,6 +19,9 @@
 #define VERBOSE 1
 
 #define DEFAULT_PERTURBATION 30
+
+extern enum PIVOT_STRATEGY strategy;
+extern enum OUTPUT_MATRIX OM;
 
 int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRATEGY strategy) {
     // déclarations
