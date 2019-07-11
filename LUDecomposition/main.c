@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-#define MAX_PREC 43
+#define MAX_PREC 51
 void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int nb_matrix, const int isFpanr) {
     char * fileName;
     int prec;
@@ -105,13 +105,15 @@ void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int 
             for ( size_t j = 0 ; j < n ; ++j ) {
                 val =  matrixRef[i][j] - perturbedMatrix[i][j];
                 printf("\n[%zu][%zu] : ref:%d,pert:%d,dif:%d",i,j,getPrecFromFpanrDouble(matrixRef[i][j]),getPrecFromFpanrDouble(perturbedMatrix[i][j]),getPrecFromFpanrDouble(val));
-                printf("\n\t%.16e - %.16e = %.16e",matrixRef[i][j],perturbedMatrix[i][j],matrixRef[i][j]-perturbedMatrix[i][j]);
+                printf("\n\t%.16e - %.16e = %.16e",fpanrToDouble(matrixRef[i][j]),fpanrToDouble(perturbedMatrix[i][j]),fpanrToDouble(matrixRef[i][j]-perturbedMatrix[i][j]));
                 absA = isFpanr?myAbs(val):fabs(val);
                 printf(" (after abs %d)",getPrecFromFpanrDouble(absA));
                 prec = MAX_PREC-getPrecFromFpanrDouble(absA);
+                //prec = getPrecFromFpanrDouble(absA);
                 arrayPrec[prec]+=1;
             }
         }
+        free(fileName);
     }
     
     printf("\n--------\nMine : size=%zu, strategy=%d,nb_matrix=%d,isFpanr=%d :\n",n,strategy,nb_matrix,isFpanr);
@@ -124,6 +126,20 @@ void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int 
     printf("\n\n");
     matrix_print_fpanr (n, n, matrixRef);
 
+
+    FILE * fp;
+    fileName = buildFileName(OM_PREC, n, -1, strategy);
+    fp = fopen(fileName, "w");
+    if ( fp == NULL ) {
+        fprintf(stderr, "\nError while opening file %s. Exiting...\n",fileName);
+    } else {
+        for ( int k = 0 ; k < MAX_PREC ; ++k ) {
+            fprintf(fp, "%d\t%d\n",k,arrayPrec[k]);
+        }
+        fclose(fp);
+    }
+
+    free(fileName);
     free(arrayPrec);
 
     //printf("mining %d %d %d",strategy, nb_matrix, isFpanr);

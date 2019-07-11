@@ -2,7 +2,7 @@
 #define LUFACTO_H
 
 enum PIVOT_STRATEGY { PS_MAX=0, PS_MAX_PRECISION };
-enum OUTPUT_MATRIX { OM_L='L', OM_U='U', OM_Y='Y', OM_X='X', OM_A_INV};
+enum OUTPUT_MATRIX { OM_L='L', OM_U='U', OM_Y='Y', OM_X='X', OM_A_INV, OM_PREC};
 
 extern enum OUTPUT_MATRIX OM;
 extern enum PIVOT_STRATEGY strategy;

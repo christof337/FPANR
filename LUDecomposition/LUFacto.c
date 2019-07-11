@@ -18,7 +18,7 @@
 
 #define VERBOSE 1
 
-#define DEFAULT_PERTURBATION 30
+#define DEFAULT_PERTURBATION 21
 
 extern enum PIVOT_STRATEGY strategy;
 extern enum OUTPUT_MATRIX OM;
@@ -262,7 +262,7 @@ int LUPivot(int n, double A[n][n], /*double tol,*/ double P[n][n], int currentRo
     for (k = currentRow; k < n; k++) {
         switch(strategy) {
             case PS_MAX:
-                // maximum strategy
+                // maximum magnitude strategy
                 absA = isFpanr?myAbs(A[k][currentRow]):fabs(A[k][currentRow]);
                 if (absA > maxA) { 
                     maxA = absA;
@@ -270,6 +270,7 @@ int LUPivot(int n, double A[n][n], /*double tol,*/ double P[n][n], int currentRo
                 }
                 break;
             case PS_MAX_PRECISION:
+                // maximum precision strategy
                 if (isFpanr) {
                     prec = getPrecFromFpanrDouble(A[k][currentRow]);
                     if ( prec > maxPrec ) {
@@ -389,10 +390,12 @@ char * buildFileName(enum OUTPUT_MATRIX OM, size_t n, short int index, enum PIVO
 
     strcat(res, "/");
 
-    if ( OM != OM_A_INV ) 
+    if ( OM != OM_A_INV && OM != OM_PREC ) 
         append(res, OM);
-    else
+    else if ( OM == OM_A_INV ) 
         strcat(res,"A_INV");
+    else
+        strcat(res,"PREC");
 
     if(index == -1) {
         sprintf(buffer, "ref");
