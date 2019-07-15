@@ -22,17 +22,21 @@ rm *.ll *.o a.out
 VERIFICARLO_BACKEND=FPANR verificarlo utils.c LUFacto.c main.c -lm -lfpanrio
 VERIFICARLO_BACKEND=FPANR verificarlo LUFacto.c main.c utils.c -lm -lfpanrio
 VERIFICARLO_BACKEND=FPANR verificarlo main.c utils.c LUFacto.c -lm -lfpanrio
-VERIFICARLO_BACKEND=FPANR ./a.out 3 1
+VERIFICARLO_BACKEND=FPANR ./a.out 3 1 LU
+VERIFICARLO_BACKEND=FPANR ./a.out 3 1 hungarian
 
 or simply with :
-gcc utils.c LUFacto.c -o LUFacto -lm -lfpanrio
+gcc utils.c LUFacto.c hungarian.c main.c -o LUFacto -lm -lfpanrio
+./LUFacto 3 0 LU
+./LUFacto 3 0 hungarian
 ./LUFacto 4
 */
 
-void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int nb_matrix, const int isFpanr) ;
+void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int nb_matrix, const int isFpanr, const enum INVERSION_ALGORITHM algorithm) ;
 
 int main(int argc, char *argv[]) {
     const short int NB_MATRIX = 8;
+    enum INVERSION_ALGORITHM algorithm = IA_LU;
 
     size_t n = 4;
     short int isFpanr = 0;
@@ -44,8 +48,19 @@ int main(int argc, char *argv[]) {
     // parsing arguments
     if (argc >= 2) {
         n = ((size_t) atoi(argv[1]));
-        if ( argc >= 3 && strcmp(argv[2],"1")==0) {
-            isFpanr = 1;
+        if ( argc >= 3 ) {
+            if (strcmp(argv[2],"1")==0) {
+                isFpanr = 1;
+            }
+            if ( argc >= 4 ) {
+                if(strcmp(argv[3],"LU")==0) {
+                    // LU
+                    algorithm = IA_LU;
+                } else if (strcmp(argv[3], "hungarian") == 0) {
+                    // hungarian
+                    algorithm = IA_HUNG;
+                }
+            }
         }
     }
 
@@ -58,27 +73,29 @@ int main(int argc, char *argv[]) {
         if ( strategy != PS_MAX_PRECISION || isFpanr ) {
             // 8 matrix need to be computed with perturbations
             for ( short int i = 0 ; i < NB_MATRIX ; ++i ) {
-                computeMatrix(n, isFpanr, i, strategy);
+                computeMatrix(n, isFpanr, i, strategy, algorithm);
             }
             // 1 "clear" is computed as reference
-            computeMatrix(n, isFpanr, -1, strategy);
+            computeMatrix(n, isFpanr, -1, strategy, algorithm);
         }
     }
 
     // up to here, files have been generated
     // let's sum them up shall we?
 
-    // looping through strategies looks like a good place to start
-    for ( int strategy = PS_MAX ; strategy <= PS_MAX_PRECISION ; ++strategy ) {
-        // ok now we have to sum up the 8 matrices that have been computed
-        mineStrategy(n, strategy, NB_MATRIX, isFpanr);
+    if ( isFpanr ) {
+        // looping through strategies looks like a good place to start
+        for ( int strategy = PS_MAX ; strategy <= PS_MAX_PRECISION ; ++strategy ) {
+            // ok now we have to sum up the 8 matrices that have been computed
+            mineStrategy(n, strategy, NB_MATRIX, isFpanr, algorithm);
+        }
     }
 
     return 0;
 }
 
 #define MAX_PREC 51
-void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int nb_matrix, const int isFpanr) {
+void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int nb_matrix, const int isFpanr, const enum INVERSION_ALGORITHM algorithm) {
     char * fileName;
     int prec;
     // on commence par déclarer le tableau qui contiendra les précisions
@@ -92,12 +109,12 @@ void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int 
     double val, absA;
     // first, the reference file
     double matrixRef[n][n], perturbedMatrix[n][n]; // it will be used for comparison THROUGHOUT the rest of this function
-    fileName = buildFileName(OM_A_INV, n, -1, strategy);
+    fileName = buildFileName(OM_A_INV, n, -1, strategy, algorithm);
     strcat(fileName,".fpanr");
     fpanrFileToDMat(n, n, matrixRef, fileName);
     //getMatrixFromFile(n,matrixRef,fileName);
     for ( size_t indMat = 0 ; indMat < nb_matrix ; ++indMat ) {
-        fileName = buildFileName(OM_A_INV, n, indMat, strategy);
+        fileName = buildFileName(OM_A_INV, n, indMat, strategy, algorithm);
         strcat(fileName,".fpanr");
         fpanrFileToDMat(n, n, perturbedMatrix, fileName);
 
@@ -128,7 +145,7 @@ void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int 
 
 
     FILE * fp;
-    fileName = buildFileName(OM_PREC, n, -1, strategy);
+    fileName = buildFileName(OM_PREC, n, -1, strategy, algorithm);
     fp = fopen(fileName, "w");
     if ( fp == NULL ) {
         fprintf(stderr, "\nError while opening file %s. Exiting...\n",fileName);

@@ -9,12 +9,14 @@
 #include "utils.h"
 #include "libfpanrio.h"
 
+#include "hungarian.h"
+
 
 // #define WRITE_X_IN_FILE
 // #define WRITE_Y_IN_FILE
 #define WRITE_A_INV_IN_FILE
 
-#define DEBUG 0
+#define DEBUG 1
 
 #define VERBOSE 1
 
@@ -23,7 +25,7 @@
 extern enum PIVOT_STRATEGY strategy;
 extern enum OUTPUT_MATRIX OM;
 
-int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRATEGY strategy) {
+int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRATEGY strategy, enum INVERSION_ALGORITHM algorithm ) {
     // déclarations
     int i,j,k;
     double (*A)[n][n], (*L)[n][n], (*U)[n][n], (*P)[n][n];
@@ -101,16 +103,34 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
     printf(isFpanr?"Using FPANR\n":"");
     fflush(stdout);
 
+    size_t independantSet[n][2];
     /* ------------------------------- */
-    /*      LU decomposition call      */
-    LU_decomposition(n, *U, *A, *L, isFpanr, *P, strategy);
+    switch ( algorithm ) {
+        case IA_LU:
+            /*      LU decomposition call      */
+            printf("\nLU decomposition :\n");
+            LU_decomposition(n, *U, *A, *L, isFpanr, *P, strategy);
+            break;
+        case IA_HUNG:
+            printf("\nHungarian decomposition (Munkres) :\n");
+            scanf("%d",NULL);
+            hungarian(n,n,*A, independantSet);
+            printf("\nEnd of hung");
+            fflush(stdout);
+            for(size_t i = 0 ; i < n ; ++i ) {
+                printf("\n(%zu) : [%zu,%zu] = %f",i, independantSet[i][0],independantSet[i][1], (*A)[independantSet[i][0]][independantSet[i][1]]);
+                fflush(stdout);
+            }
+            break;
+    }
     /* ------------------------------- */
 
     printf("\n\nFin du traitement...\n");
     fflush(stdout);
 
     // résolution
-    // for ( i = 0 ; i < n ; ++i ) {        
+    // for ( i = 0 ; i < n ; ++i ) {
+    if (algorithm == IA_LU)        
         LUPSolve(n, *L, *U, *Y, *P, *B, *X, isFpanr);
         // int permutedIndex = isFpanr?getOneFpanr(n,(*P)[i]):getOne(n,(*P)[i]);
         // array_copy(n, *X, (*Ainv)[permutedIndex]);
@@ -123,7 +143,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
         printf("\n[L]: \n");
         matrix_print_fpanr(n,n,*L);
 #endif // VERBOSE
-        fileName = buildFileName(OM_L, n, index, strategy);
+        fileName = buildFileName(OM_L, n, index, strategy, algorithm);
         fpanrDMatToFile(n, n, *L, fileName);
         free(fileName);
 
@@ -131,7 +151,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
         printf("\n\n[U]: \n");
         matrix_print_fpanr(n,n,*U);
 #endif // VERBOSE
-        fileName = buildFileName(OM_U, n, index, strategy);
+        fileName = buildFileName(OM_U, n, index, strategy, algorithm);
         fpanrDMatToFile(n, n, *U, fileName);
         free(fileName);
 
@@ -140,7 +160,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
         array_print_fpanr(n,*Y);
 #endif // VERBOSE
 #ifdef WRITE_Y_IN_FILE
-        fileName = buildFileName(OM_Y, n, index, strategy);
+        fileName = buildFileName(OM_Y, n, index, strategy, algorithm);
         fpanrDVecToFile(n, *Y, fileName);
         free(fileName);
 #endif // WRITE_Y_IN_FILE
@@ -150,7 +170,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
         array_print_fpanr(n,*X);
 #endif // VERBOSE
 #ifdef WRITE_X_IN_FILE
-        fileName = buildFileName(OM_X, n, index, strategy);
+        fileName = buildFileName(OM_X, n, index, strategy, algorithm);
         fpanrDVecToFile(n, *X, fileName);
         free(fileName);
 #endif // WRITE_X_IN_FILE
@@ -163,7 +183,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
         matrix_print_fpanr(n, n, *Ainv);
 //#endif // VERBOSE
 #ifdef WRITE_A_INV_IN_FILE
-        fileName = buildFileName(OM_A_INV, n, index, strategy);
+        fileName = buildFileName(OM_A_INV, n, index, strategy, algorithm);
         fpanrDMatToFile(n, n, *Ainv, fileName);
         free(fileName);
 #endif // WRITE_A_INV_IN_FILE
@@ -183,6 +203,9 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
         printf("\n\n[X]: \n");
         array_print(n,*X);
         printf("\n");
+
+        printf("\n\n[A]: \n");
+        matrix_print(n,n,*A);
 #endif // VERBOSE
     }
 #if DEBUG
@@ -379,7 +402,7 @@ double LUPDeterminant(size_t n, double A[n][n], int nbPivots) {
 #define MAX_FILE_NAME_LENGTH 100
 #define FILE_NAME_SUFFIX ".dat"
 
-char * buildFileName(enum OUTPUT_MATRIX OM, size_t n, short int index, enum PIVOT_STRATEGY strategy) {
+char * buildFileName(enum OUTPUT_MATRIX OM, size_t n, short int index, enum PIVOT_STRATEGY strategy, enum INVERSION_ALGORITHM algorithm) {
     char * res;
     char buffer[20];
 
@@ -389,6 +412,15 @@ char * buildFileName(enum OUTPUT_MATRIX OM, size_t n, short int index, enum PIVO
     strcpy(res, FILE_FOLDER);
 
     strcat(res, "/");
+
+    switch ( algorithm ) {
+        case IA_LU:
+            strcat(res,"LU");
+            break;
+        case IA_HUNG:
+            strcat(res,"hung");
+            break;
+    }
 
     if ( OM != OM_A_INV && OM != OM_PREC ) 
         append(res, OM);
@@ -424,4 +456,57 @@ char * buildFileName(enum OUTPUT_MATRIX OM, size_t n, short int index, enum PIVO
     strcat(res, FILE_NAME_SUFFIX);
 
     return res;
+}
+
+ /* Gauss-Jordan
+     r = 0                                       (r est l'indice de ligne du dernier pivot trouvé)
+     Pour j de 1 jusqu'à m                       (j décrit tous les indices de colonnes)
+     |   Rechercher max(|A[i,j]|, r+1 ≤ i ≤ n). Noter k l'indice de ligne du maximum
+     |                                           (A[k,j] est le pivot)
+     |   Si A[k,j]≠0 alors                       (A[k,j] désigne la valeur de la ligne k et de la colonne j)
+     |   |   r=r+1                               (r désigne l'indice de la future ligne servant de pivot)
+     |   |   Diviser la ligne k par A[k,j]       (On normalise la ligne de pivot de façon que le pivot prenne la valeur 1)
+     |   |   Échanger les lignes k et r          (On place la ligne du pivot en position r)
+     |   |   Pour i de 1 jusqu'à n               (On simplifie les autres lignes)
+     |   |   |   Si i≠r alors
+     |   |   |   |   Soustraire à la ligne i la ligne r multipliée par A[i,j] (de façon à annuler A[i,j])
+     |   |   |   Fin Si
+     |   |   Fin Pour
+     |   Fin Si
+     Fin Pour
+  Fin Gauss-Jordan */
+void inversionGaussJordan(const size_t n, const size_t m, double A[n][m]) {
+    int r = 0;
+    size_t k;
+    double max, ptr[m];
+    for ( int j = 0 ; j < m ; ++j ) {
+        // rechercher max(|A[i,j]|
+        max = 0.0;
+        for ( int i = r ; i < n ; ++i ) {
+            if(A[i][j] > max) {
+                max = A[i][j];
+                k = i;
+            }
+        }
+
+        if ( max != 0.0 ) {
+            r += 1;
+            // diviser la ligne K par A[k][j]
+            for ( size_t l = 0 ; l < m ; ++l ) {
+                A[k][l] /= max;
+            }
+            // échanger les lignes k et r
+            array_copy(n, A[k], ptr);
+            array_copy(n, A[r], A[k]);
+            array_copy(n, ptr, A[r]);
+            for(int i = 0 ; i < n ; ++i ) {
+                if ( i != r ) {
+                    // Soustraire à la ligne i la ligne r multipliée par A[i,j] (de façon à annuler A[i,j])
+                    for ( size_t l = 0 ; l < m ; ++l ) {
+                        A[i][l] -= A[r][l]*A[i][j];
+                    }
+                }
+            }
+        }
+    }
 }
