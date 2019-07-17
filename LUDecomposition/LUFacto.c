@@ -102,6 +102,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
     printf("\n\nDébut du traitement...\n");
     printf(isFpanr?"Using FPANR\n":"");
     fflush(stdout);
+    int bla;
 
     size_t independantSet[n][2];
     /* ------------------------------- */
@@ -113,7 +114,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
             break;
         case IA_HUNG:
             printf("\nHungarian decomposition (Munkres) :\n");
-            scanf("%d",NULL);
+            // scanf("%d",&bla);
             hungarian(n,n,*A, independantSet);
             printf("\nEnd of hung");
             fflush(stdout);

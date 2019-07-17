@@ -6,9 +6,13 @@
 #define TRUE 1
 #define FALSE 0
 
-#define DEBUG
+// #define DEBUG
 
-int hungarian(const size_t n, const size_t m, double matrix[n][m], size_t independantSet[MIN(n,m)][2]) {
+enum HUNG_STEPS{HS_PRELIMINARIES, HS_ONE, HS_TWO, HS_THREE, HS_END};
+
+int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t independantSet[MIN(n,m)][2]) {
+  double matrix[n][m];
+  memcpy(matrix, inputMat, sizeof(double)*n*m);
   double minH;
   short int starred[n][m], coveredRows[n], coveredColumns[m], primed[n][m];
   short int isStarred = FALSE, isFound = FALSE, isCovered = FALSE, isMin = FALSE;
@@ -16,273 +20,328 @@ int hungarian(const size_t n, const size_t m, double matrix[n][m], size_t indepe
   short int bStep1 = TRUE/*, step2 = FALSE, step3 = FALSE*/;
   size_t sequence[n*m][2];
   size_t zRow, zColumn;
+  short int shouldExit = FALSE;
+  enum HUNG_STEPS state = HS_PRELIMINARIES;
+  size_t cpt;
+  int bla;
 
-#ifdef DEBUG
-  printf("stepA\n");
-  //scanf("%c",&bStep1);
-  fflush(stdout);
-#endif
-
-// PRELIMINARIES
-  // no lines are covered
-  memset( coveredRows, FALSE, n*sizeof(short int) );
-  memset( coveredColumns, FALSE, m*sizeof(short int) );
-  // no zeros are starred or primed
-  memset( starred, FALSE, n*m*sizeof(short int) );
-  memset( primed, FALSE, n*m*sizeof(short int) );
-  // consider a row of the matrix A 
-  for ( i = 0 ; i < n ; ++i ) {
-    // substract from each element in this row the smallest element of this row
-    minH = matrix[i][0];
-    for ( j = 1 ; j < m ; ++j ) {
-      if ( matrix[i][j] < minH ) {
-        minH = matrix[i][j];
-      }
-    }
-    for ( j = 0 ; j < m ; ++j ) {
-      matrix[i][j] -= minH;
-    }
-  } // do the same for each row of A
-
-#ifdef DEBUG
-  printf("stepB\n");
-  fflush(stdout);
-#endif
-
-  // consider a column of the matrix A 
-  for ( j = 0 ; j < m ; ++j ) {
-    // substract from each element in this column the smallest element of this column
-    minH = matrix[0][j];
-    for ( i = 1 ; i < n ; ++i ) {
-      if ( matrix[i][j] < minH ) {
-        minH = matrix[i][j];
-      }
-    }
-    for ( i = 0 ; i < n ; ++i ) {
-      matrix[i][j] -= minH;
-    }
-  } // do the same for each column of A
-#ifdef DEBUG
-  printf("stepC\n");
-  fflush(stdout);
-#endif
-  for ( i = 0 ; i < n ; ++i ) {
-    for ( j = 0 ; j < m ; ++j ) {
-      // consider a zero Z of the matrix
-      if (matrix[i][j]==0.0) {
-        // if there is no starred zero in its row
-        isStarred = rowContainsTrue(n,m,i,starred);
-        // and none in its column
-        isStarred = isStarred || columnContainsTrue(n,m,j,starred);
-        // /!\!
-        if ( !isStarred ) {
-          // star Z
-          starred[i][j] = TRUE;
-        }
-      } // repeat, considering each zero in the matrix in turn
-    }
-  }
-#ifdef DEBUG
-  printf("stepD\n");
-  fflush(stdout);
-#endif
-  // then cover every column containing a starred zero
-  for ( j = 0 ; j < m ; ++j ) {
-    isStarred = columnContainsTrue(n,m,j,starred);
-    if (isStarred) {
-      coveredColumns[j] = TRUE;
-    }
-  }
   #ifdef DEBUG
-    printf("before while step1\n");
+    printf("stepA\n");
+    //scanf("%c",&bStep1);
     fflush(stdout);
   #endif
-step1:
-  while(bStep1) {
-      // STEP 1
-  #ifdef DEBUG
-    printf("Step1\n");
-    fflush(stdout);
-  #endif
-    isCovered = FALSE;
-    for ( i = 0 ; i < n ; ++i ) {
-      for ( j = 0 ; j < m ; ++j ) {
-        // choose a non-covered zero
-        if (matrix[i][j] == 0.0 && coveredRows[i] == FALSE && coveredColumns[j] == FALSE) {
-            // and prime it
-          primed[i][j] = TRUE;
-            // consider the row containing it (i)
-          isStarred = rowContainsTrue(n,m,i,starred);
-            // if there is no starred zero in this row
-          if ( !isStarred ) {
-            // go at once to step 2
-            bStep1 = FALSE;
-            goto step2;
-          } else { // if there is a starred zero Z in this row
-            // cover this row
-            coveredRows[i] = TRUE;
-            for ( k = 0 ; k < m ; ++k ) {
-              if ( starred[i][k] == TRUE) {
-                // and uncover the column of Z
-                coveredColumns[k] = FALSE;
-              } // is Z starred?
-            } // selecting column of z
-          } // starred 0 is this row?
-        } // non covered zero ?
-      } // for columns
-    }
-    isCovered = TRUE;
-    for ( i = 0 ; i < n && isCovered ; ++i ) {
-      for (j = 0 ; j < m && isCovered ; ++j ) {
-        if ( matrix[i][j] == 0.0 && coveredRows[i] == FALSE && coveredColumns[j] == FALSE) {
-          isCovered = FALSE;
-        }
-      }
-    } 
-    bStep1 = !isCovered;
-  } // repeat until all zeros are covered
-  goto step3;
-  // end of step1
-step2:
-    // STEP 2
-  #ifdef DEBUG
-    printf("step2\n");
-    scanf("%d",&bStep1);
-    fflush(stdout);
-  #endif
-  isFound = FALSE;
-  for ( i = 0 ; i < n && !isFound ; ++i ) {
-    for ( j = 0 ; j < m && !isFound; ++j ) {
-      if ( coveredRows[i] == FALSE && coveredColumns[j] == FALSE && primed[i][j] == TRUE ) {
-        sequence[0][0] = i;
-        sequence[0][1] = j;
-        isFound = TRUE;
-      }
-    }
-  }
-  isStarred = TRUE;
-  size_t index = 1;
-  while ( isStarred ) {
-    isFound = FALSE;
-    zRow = sequence[index-1][0];
-    zColumn = sequence[index-1][1];
-    for ( i = 0 ; i < n && !isFound ; ++i ) {
-      if ( starred[i][zColumn] == TRUE ) {
-        sequence[index][0] = i;
-        sequence[index][1] = zColumn;
-        index++;
-        isFound = TRUE;
-      }
-    }
-    zRow = sequence[index-1][0];
-    zColumn = sequence[index-1][1];
 
-    if ( isFound ) {
-      isFound = FALSE;
-      for ( j = 0 ; j < m && !isFound ; ++j ) {
-        if ( primed[i][j] == TRUE ) {
-          sequence[index][0] = zRow;
-          sequence[index][1] = j;
-          index++;
-          isFound = TRUE;
-        }
-      }
-    } else {
-      isStarred = FALSE;
-    }
-  }
-  for ( k = 0 ; k < index ; ++k ) {
-    zRow = sequence[k][0];
-    zColumn = sequence[k][1];
-      // unstar each starred zero of the sequence
-    if (starred[zRow][zColumn] == TRUE) {
-      starred[zRow][zColumn] = FALSE;
-    }
-      // star each primed zero of the sequence
-    if (primed[zRow][zColumn] == TRUE) {
-      starred[zRow][zColumn] = TRUE;
-    }
-  }
-  for ( i = 0 ; i < n ; ++i ) {
-      // erase all primes
-    setRow(n,m,i,primed,FALSE);
-      // uncover every row
-    coveredRows[i] = FALSE;
-  }
-  for( j = 0 ; j < m ; ++j ) {
-    if ( columnContainsTrue(n, m, j, starred) ) {
-      coveredColumns[j] = TRUE;
-    }
-  }
-
-  isCovered = TRUE;
-  for( j = 0 ; j < m && isCovered ; ++j ) {
-    isCovered = isCovered && isCoveredColumn(m,j,coveredColumns);
-  }
-  if ( isCovered ) {
-      // if all column are covered, the starred 0 form the independant set
-#ifdef DEBUG
-    printf("Found the independant set\n");
-    fflush(stdout);
-#endif
-    bStep1 = FALSE;
-    size_t cpt = 0;
-    for( i = 0 ; i < n ; ++i ) {
-      for ( j = 0 ; j < m ; ++j ) {
-        if ( starred[i][j] == TRUE ) {
-          independantSet[cpt][0] = i;
-          independantSet[cpt][1] = j;
-        }
-      }
-    }
-    goto endOfHung;
-  } else {
-    bStep1 = TRUE;
-    goto step1;
-  }
-  // end of STEP 2
-step3:
-#ifdef DEBUG
-  printf("Step3\n");
-  fflush(stdout);
-#endif
-  // let h denote the smallest non-covered element of the matrix
-  isMin = FALSE;
-  for ( i = 0 ; i < n ; ++i ) {
-    for ( j = 0 ; j < m ; ++j ) {
-      if ( coveredRows[i] == FALSE && coveredColumns[j] == FALSE ) {
-        if(!isMin) {
-          minH = matrix[i][j];
-          isMin = TRUE;
-        } else {
+  while(!shouldExit) {
+    switch(state) {
+      case HS_PRELIMINARIES:
+      // PRELIMINARIES
+      // no lines are covered
+      memset( coveredRows, FALSE, n*sizeof(short int) );
+      memset( coveredColumns, FALSE, m*sizeof(short int) );
+      // no zeros are starred or primed
+      memset( starred, FALSE, n*m*sizeof(short int) );
+      memset( primed, FALSE, n*m*sizeof(short int) );
+      // consider a row of the matrix A 
+      for ( i = 0 ; i < n ; ++i ) {
+        // substract from each element in this row the smallest element of this row
+        minH = matrix[i][0];
+        for ( j = 1 ; j < m ; ++j ) {
           if ( matrix[i][j] < minH ) {
             minH = matrix[i][j];
           }
         }
-      }
-    }
-  }
-  printf("h=%f",minH);
-  // add h to each covered row
-  for ( i = 0 ; i < n ; ++i ) {
-    if(isCoveredRow(n,i,coveredRows)) {
+        for ( j = 0 ; j < m ; ++j ) {
+          matrix[i][j] -= minH;
+        }
+      } // do the same for each row of A
+
+      #ifdef DEBUG
+        printf("stepB\n");
+        fflush(stdout);
+      #endif
+
+      // consider a column of the matrix A 
       for ( j = 0 ; j < m ; ++j ) {
-        matrix[i][j] += minH;
-      }
-    }
-  }
-  // substract h from each uncovered column
-  for ( j = 0 ; j < m ; ++j ) {
-    if(!isCoveredColumn(m,j,coveredColumns)) {
+        // substract from each element in this column the smallest element of this column
+        minH = matrix[0][j];
+        for ( i = 1 ; i < n ; ++i ) {
+          if ( matrix[i][j] < minH ) {
+            minH = matrix[i][j];
+          }
+        }
+        for ( i = 0 ; i < n ; ++i ) {
+          matrix[i][j] -= minH;
+        }
+      } // do the same for each column of A
+      #ifdef DEBUG
+        printf("stepC\n");
+        fflush(stdout);
+      #endif
       for ( i = 0 ; i < n ; ++i ) {
-        matrix[i][j] -= minH;
+        for ( j = 0 ; j < m ; ++j ) {
+          // consider a zero Z of the matrix
+          if (matrix[i][j]==0.0) {
+            // if there is no starred zero in its row
+            isStarred = rowContainsTrue(n,m,i,starred);
+            // and none in its column
+            isStarred = isStarred || columnContainsTrue(n,m,j,starred);
+            // /!\!
+            if ( !isStarred ) {
+              // star Z
+              starred[i][j] = TRUE;
+            }
+          } // repeat, considering each zero in the matrix in turn
+        }
       }
-    }
-  }
-  bStep1 = TRUE;
-  goto step1;
- // end of step 3
-endOfHung:
+      #ifdef DEBUG
+        printf("stepD\n");
+        cusPrintM(n,m,starred);
+        cusPrintM(n,m,primed);
+        fflush(stdout);
+      #endif
+      isCovered = TRUE;
+      // then cover every column containing a starred zero
+      for ( j = 0 ; j < m ; ++j ) {
+        isStarred = columnContainsTrue(n,m,j,starred);
+        isCovered = isCovered && isStarred;
+        if (isStarred) {
+          coveredColumns[j] = TRUE;
+        }
+      }
+      #ifdef DEBUG
+        printf("before while step1\n");
+        fflush(stdout);
+      #endif
+      if ( isCovered ) 
+        state = HS_END;
+      else
+        state = HS_ONE;
+      break;
+    case HS_ONE:
+      bStep1 = TRUE;
+      while(bStep1) {
+        // STEP 1
+        #ifdef DEBUG
+          printf("Step1\n");
+          // scanf("%d",&bla);
+          fflush(stdout);
+        #endif
+        isCovered = FALSE;
+        for ( i = 0 ; i < n ; ++i ) {
+          for ( j = 0 ; j < m ; ++j ) {
+            printf("%f ",matrix[i][j]);
+            // choose a non-covered zero
+      #ifdef DEBUG
+        printf("\nStep:%zu %zu",i,j);
+        cusPrintA(n,coveredRows);
+        cusPrintA(m,coveredColumns);
+        cusPrintM(n,m,starred);
+        fflush(stdout);
+        scanf("%d",&bla);
+      #endif
+            if (matrix[i][j] == 0.0 && coveredRows[i] == FALSE && coveredColumns[j] == FALSE) {
+      #ifdef DEBUG
+        printf("\nWAZAAAAAAAAa:%zu%zu",i,j);
+        cusPrintA(n,coveredRows);
+        cusPrintA(m,coveredColumns);
+        cusPrintM(n,m,starred);
+        fflush(stdout);
+        scanf("%d",&bla);
+      #endif
+              // and prime it
+              primed[i][j] = TRUE;
+                // consider the row containing it (i)
+              isStarred = rowContainsTrue(n,m,i,starred);
+                // if there is no starred zero in this row
+              if ( !isStarred ) {
+                // go at once to step 2
+                bStep1 = FALSE;
+                state = HS_TWO;
+              } else { // if there is a starred zero Z in this row
+                // cover this row
+                coveredRows[i] = TRUE;
+                for ( k = 0 ; k < m ; ++k ) {
+                  if ( starred[i][k] == TRUE) {
+                    // and uncover the column of Z
+                    coveredColumns[k] = FALSE;
+                  } // is Z starred?
+                } // selecting column of z
+              } // starred 0 is this row?
+            } // non covered zero ?
+          } // for columns
+        }
+        if(bStep1) {
+          isCovered = TRUE;
+          for ( i = 0 ; i < n && isCovered ; ++i ) {
+            for (j = 0 ; j < m && isCovered ; ++j ) {
+              if ( matrix[i][j] == 0.0 && coveredRows[i] == FALSE && coveredColumns[j] == FALSE) {
+                isCovered = FALSE;
+              }
+            }
+          } 
+          bStep1 = !isCovered;
+        }
+      } // repeat until all zeros are covered
+      if ( state == HS_ONE) 
+        state = HS_THREE;
+      // end of step1
+      fflush(stdin);
+      fflush(stdout);
+      scanf("%d",&bla);
+      fflush(stdin);
+      fflush(stdout);
+      break;
+    case HS_TWO:
+      // STEP 2
+      #ifdef DEBUG
+        printf("step2\n");
+        scanf("%d",&bStep1);
+        fflush(stdout);
+      #endif
+      isFound = FALSE;
+      for ( i = 0 ; i < n && !isFound ; ++i ) {
+        for ( j = 0 ; j < m && !isFound; ++j ) {
+          if ( coveredRows[i] == FALSE && coveredColumns[j] == FALSE && primed[i][j] == TRUE ) {
+            sequence[0][0] = i;
+            sequence[0][1] = j;
+            isFound = TRUE;
+          }
+        }
+      }
+      isStarred = TRUE;
+      size_t index = 1;
+      while ( isStarred ) {
+        isFound = FALSE;
+        zRow = sequence[index-1][0];
+        zColumn = sequence[index-1][1];
+        for ( i = 0 ; i < n && !isFound ; ++i ) {
+          if ( starred[i][zColumn] == TRUE ) {
+            sequence[index][0] = i;
+            sequence[index][1] = zColumn;
+            index++;
+            isFound = TRUE;
+          }
+        }
+        zRow = sequence[index-1][0];
+        zColumn = sequence[index-1][1];
+
+        if ( isFound ) {
+          isFound = FALSE;
+          for ( j = 0 ; j < m && !isFound ; ++j ) {
+            if ( primed[i][j] == TRUE ) {
+              sequence[index][0] = zRow;
+              sequence[index][1] = j;
+              index++;
+              isFound = TRUE;
+            }
+          }
+        } else {
+          isStarred = FALSE;
+        }
+      }
+      for ( k = 0 ; k < index ; ++k ) {
+        zRow = sequence[k][0];
+        zColumn = sequence[k][1];
+          // unstar each starred zero of the sequence
+        if (starred[zRow][zColumn] == TRUE) {
+          starred[zRow][zColumn] = FALSE;
+        }
+          // star each primed zero of the sequence
+        if (primed[zRow][zColumn] == TRUE) {
+          starred[zRow][zColumn] = TRUE;
+        }
+      }
+      for ( i = 0 ; i < n ; ++i ) {
+          // erase all primes
+        setRow(n,m,i,primed,FALSE);
+          // uncover every row
+        coveredRows[i] = FALSE;
+      }
+      for( j = 0 ; j < m ; ++j ) {
+        if ( columnContainsTrue(n, m, j, starred) ) {
+          coveredColumns[j] = TRUE;
+        }
+      }
+
+      isCovered = TRUE;
+      for( j = 0 ; j < m && isCovered ; ++j ) {
+        isCovered = isCovered && isCoveredColumn(m,j,coveredColumns);
+      }
+      if ( isCovered ) {
+          // if all column are covered, the starred 0 form the independant set
+        #ifdef DEBUG
+          printf("Found the independant set\n");
+          fflush(stdout);
+        #endif
+        state = HS_END;
+      } else {
+        state = HS_ONE;
+      }
+      // end of STEP 2
+      break;
+    case HS_THREE:
+      #ifdef DEBUG
+        printf("Step3\n");
+        fflush(stdout);
+        cusPrintA(n,coveredRows);
+        cusPrintA(m,coveredColumns);
+      #endif
+      // let h denote the smallest non-covered element of the matrix
+      isMin = FALSE;
+      for ( i = 0 ; i < n ; ++i ) {
+        if(coveredRows[i] == FALSE) {
+          for ( j = 0 ; j < m ; ++j ) {
+            if ( coveredColumns[j] == FALSE ) {
+              if(!isMin) {
+                minH = matrix[i][j];
+                isMin = TRUE;
+              } else {
+                if ( matrix[i][j] < minH ) {
+                  minH = matrix[i][j];
+                }
+              }
+            }
+          }
+        }
+      }
+      #ifdef DEBUG
+        printf("h=%f\n",minH);
+      #endif
+      // add h to each covered row
+      for ( i = 0 ; i < n ; ++i ) {
+        if(isCoveredRow(n,i,coveredRows)) {
+          for ( j = 0 ; j < m ; ++j ) {
+            matrix[i][j] += minH;
+          }
+        }
+      }
+      // substract h from each uncovered column
+      for ( j = 0 ; j < m ; ++j ) {
+        if(!isCoveredColumn(m,j,coveredColumns)) {
+          for ( i = 0 ; i < n ; ++i ) {
+            matrix[i][j] -= minH;
+          }
+        }
+      }
+      state = HS_ONE;
+     // end of step 3
+      break;
+    case HS_END:
+      cpt = 0;
+      for( i = 0 ; i < n ; ++i ) {
+        for ( j = 0 ; j < m ; ++j ) {
+          if ( starred[i][j] == TRUE ) {
+            independantSet[cpt][0] = i;
+            independantSet[cpt][1] = j;
+            cpt++;
+          }
+        }
+      }
+      shouldExit = TRUE;
+      break;
+    } // switch
+  } // should exit
+  // end
 #ifdef DEBUG
   printf("EOF\n");
   fflush(stdout);
@@ -344,4 +403,19 @@ short int isCoveredColumn(const size_t m, const size_t column, const short int m
   //   }
   // }
   return found;
+}
+
+void cusPrintA(const size_t n, const short int a[n]) {
+  for ( size_t i = 0 ; i < n ; ++i ) {
+    printf("%d\t",a[i]);
+  }
+}
+
+void cusPrintM(const size_t n, const size_t m, const short int mat[n][m]) {
+  for (size_t i = 0 ; i < n ; ++i ) {
+    for (size_t j = 0 ; j < m ; ++j ) {
+      printf("%d\t",mat[i][j]);
+    }
+    printf("\n");
+  }
 }

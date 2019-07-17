@@ -12,5 +12,7 @@ void setRow(const size_t n, const size_t m, const size_t row, short int matrix[n
 void setColumn(const size_t n, const size_t m, const size_t column, short int matrix[n][m], const short int val) ;
 short int isCoveredRow(const size_t n, const size_t row, const short int matrix[n]);
 short int isCoveredColumn(const size_t m, const size_t column, const short int matrix[m]);
+void cusPrintA(const size_t n, const short int a[n]);
+void cusPrintM(const size_t n, const size_t m, const short int mat[n][m]);
  
 #endif // HUNGARIAN_H
