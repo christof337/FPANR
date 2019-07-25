@@ -122,6 +122,8 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
                 printf("\n(%zu) : [%zu,%zu] = %f",i, independantSet[i][0],independantSet[i][1], (*A)[independantSet[i][0]][independantSet[i][1]]);
                 fflush(stdout);
             }
+            // we got S
+
             break;
     }
     /* ------------------------------- */
@@ -476,13 +478,13 @@ char * buildFileName(enum OUTPUT_MATRIX OM, size_t n, short int index, enum PIVO
      |   Fin Si
      Fin Pour
   Fin Gauss-Jordan */
-void inversionGaussJordan(const size_t n, const size_t m, double A[n][m]) {
+void inversionGaussJordan(const size_t n, const size_t m, double A[n][m], const short int isFpanr) {
     int r = 0;
     size_t k;
     double max, ptr[m];
     for ( int j = 0 ; j < m ; ++j ) {
         // rechercher max(|A[i,j]|
-        max = 0.0;
+        max = isFpanr?dtfp(0.0):0.0;
         for ( int i = r ; i < n ; ++i ) {
             if(A[i][j] > max) {
                 max = A[i][j];
@@ -490,8 +492,9 @@ void inversionGaussJordan(const size_t n, const size_t m, double A[n][m]) {
             }
         }
 
-        if ( max != 0.0 ) {
-            r += 1;
+        if ( max != isFpanr?dtfp(0.0):0.0 ) {
+            manualPivoting(n,m,A,max,k,j,r);
+           /* r += 1;
             // diviser la ligne K par A[k][j]
             for ( size_t l = 0 ; l < m ; ++l ) {
                 A[k][l] /= max;
@@ -507,7 +510,51 @@ void inversionGaussJordan(const size_t n, const size_t m, double A[n][m]) {
                         A[i][l] -= A[r][l]*A[i][j];
                     }
                 }
+            }*/
+        }
+    }
+}
+
+void manualPivoting(const size_t n, const size_t m, double A[n][m], const double pivotValue, const size_t currentLine, const size_t currentColumn, const size_t lastPivotLine) {
+    // diviser la ligne K (currentLine) par A[k][j] (pivotValue)
+    for ( size_t l = 0 ; l < m ; ++l ) {
+        A[currentLine][l] /= pivotValue;
+    }
+    // échanger les lignes k (currentLine) et r (lastPivotLine)
+    array_copy(n, A[currentLine], ptr);
+    array_copy(n, A[lastPivotLine], A[currentLine]);
+    array_copy(n, ptr, A[lastPivotLine]);
+    for(size_t i = 0 ; i < n ; ++i ) {
+        if ( i != lastPivotLine ) {
+            // Soustraire à la ligne i la ligne r multipliée par A[i,j] (de façon à annuler A[i,j])
+            for ( size_t l = 0 ; l < m ; ++l ) {
+                A[i][l] -= A[lastPivotLine][l]*A[i][currentColumn];
             }
+        }
+    }
+}
+
+// invert the matrix A and put the result in Ainv
+void gaussJordanInversion(const size_t n, const size_t m, const double A[n][m], double Ainv[n][m], const short int isFpanr) {
+    // adding identity matrix to the end
+    double B[n][m*2];
+    for(int i = 0 ; i < n ; ++i ) {
+        for(int j = 0 ; j < m*2 ; ++j ) {
+            if(j<m) {
+                B[i][j] = A[i][j];
+            } else {
+                if(i==j-m) {
+                    B[i][j] = isFpanr?dtfp(1.0):1.0;
+                } else {
+                    B[i][j] = isFpanr?dtfp(0.0):0.0;
+                }
+            }
+        }
+    }
+    inversionGaussJordan(n, m*2, B, isFpanr);
+    for(int i = 0 ; i < n ; ++i ) {
+        for ( int j = 0 ; j < m ; ++j ) {
+            Ainv[i][j] = B[i][j+m];
         }
     }
 }

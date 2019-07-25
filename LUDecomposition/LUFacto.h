@@ -18,5 +18,6 @@ void LUPInvert(int n, double U[n][n], double L[n][n], double P[n][n], double IA[
 double LUPDeterminant(size_t n, double A[n][n], int nbPivots);
 char * buildFileName(enum OUTPUT_MATRIX OM, size_t n, short int index, enum PIVOT_STRATEGY strategy, enum INVERSION_ALGORITHM algorithm);
 void inversionGaussJordan(const size_t n, const size_t m, double A[n][m]);
+void gaussJordanInversion(const size_t n, const size_t m, const double A[n][m], double Ainv[n][m], const short int isFpanr);
 
 #endif // LUFACTO_H

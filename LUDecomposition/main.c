@@ -32,13 +32,15 @@ gcc utils.c LUFacto.c hungarian.c main.c -o LUFacto -lm -lfpanrio
 ./LUFacto 4
 */
 
+#define DEFAULT_MATRIX_SIZE 4
+
 void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int nb_matrix, const int isFpanr, const enum INVERSION_ALGORITHM algorithm) ;
 
 int main(int argc, char *argv[]) {
     const short int NB_MATRIX = 8;
     enum INVERSION_ALGORITHM algorithm = IA_LU;
 
-    size_t n = 4;
+    size_t n = DEFAULT_MATRIX_SIZE;
     short int isFpanr = 0;
 
     time_t t;
