@@ -9,6 +9,8 @@
 
 #include "libfpanrio.h"
 
+#define TRUE 1
+#define FALSE 0
 
 double myAbs(const double a) {
 	double_st res, val;
@@ -469,4 +471,13 @@ int getRandomValue(const int range) {
 	//srandom((unsigned) time(&t));
 
 	return random() % range;
+}
+
+int isInZu(size_t n, size_t S[n][2], int i, int j) {
+	for ( int k = 0 ; k < n ; ++k ) {
+		if(S[k][0] == i && S[k][1] == j ) {
+			return TRUE;
+		} 
+	}
+	return FALSE;
 }

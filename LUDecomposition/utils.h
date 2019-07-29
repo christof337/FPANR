@@ -51,5 +51,6 @@ void perturbateMatrix_fpanr(const size_t n, const size_t m, double A[n][n], cons
 // miscellaneous
 void append(char* s, const char c);
 int getRandomValue(const int range);
+int isInZu(size_t n, size_t S[n][2], int i, int j);
 
 #endif // UTILS_H

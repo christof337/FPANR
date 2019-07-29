@@ -22,6 +22,15 @@ rm *.ll *.o a.out
 VERIFICARLO_BACKEND=FPANR verificarlo utils.c LUFacto.c main.c -lm -lfpanrio
 VERIFICARLO_BACKEND=FPANR verificarlo LUFacto.c main.c utils.c -lm -lfpanrio
 VERIFICARLO_BACKEND=FPANR verificarlo main.c utils.c LUFacto.c -lm -lfpanrio
+VERIFICARLO_BACKEND=FPANR ./a.out 3 1 hungarian
+
+rm *.ll *.o a.out
+VERIFICARLO_BACKEND=FPANR verificarlo utils.c hungarian.c LUFacto.c main.c -lm -lfpanrio
+VERIFICARLO_BACKEND=FPANR verificarlo hungarian.c LUFacto.c main.c utils.c -lm -lfpanrio
+VERIFICARLO_BACKEND=FPANR verificarlo LUFacto.c main.c utils.c hungarian.c -lm -lfpanrio
+VERIFICARLO_BACKEND=FPANR verificarlo main.c utils.c hungarian.c LUFacto.c -lm -lfpanrio
+VERIFICARLO_BACKEND=FPANR ./a.out 3 1 hungarian
+
 VERIFICARLO_BACKEND=FPANR ./a.out 3 1 LU
 VERIFICARLO_BACKEND=FPANR ./a.out 3 1 hungarian
 
@@ -37,6 +46,16 @@ gcc utils.c LUFacto.c hungarian.c main.c -o LUFacto -lm -lfpanrio
 void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int nb_matrix, const int isFpanr, const enum INVERSION_ALGORITHM algorithm) ;
 
 int main(int argc, char *argv[]) {
+    /*double a,b;
+    a = doubleToFpanrWithPrec(1.5,48);
+    b = doubleToFpanrWithPrec(1.6,49);
+
+    printf("%d", cmpFpanrDouble( a, b) );
+    printf("\na : %1.54F, b : %1.54F, a-b : %1.100F ? %d\n", fptd(a),fptd(b), fptd(a)-fptd(b), fptd(a)-fptd(b)==0.0);
+    printf("\n? %d\n",fptd(a)==fptd(b));
+    printf("\ndoublesub : %1.54F, 0.0 : %1.54F ? %d ?? %d ?? %d",_doublesub(a,b),0.0,_doublesub(a,b)==0.0, fptd(_doublesub(a,b))==0.0, _doublesub(a,b)==dtfp(0.0));
+
+    return 0;*/
     const short int NB_MATRIX = 8;
     enum INVERSION_ALGORITHM algorithm = IA_LU;
 

@@ -5,7 +5,7 @@
 
 #define MIN(A,B) A<B?A:B
 
-int hungarian(const size_t n, const size_t m, double matrix[n][m], size_t independantSet[MIN(n,m)][2]);
+int hungarian(const size_t n, const size_t m, double matrix[n][m], size_t independantSet[MIN(n,m)][2], short int isFpanr);
 short int rowContainsTrue(const size_t n, const size_t m, const size_t row, const short int matrix[n][m]);
 short int columnContainsTrue(const size_t n, const size_t m, const size_t column, const short int matrix[n][m]);
 void setRow(const size_t n, const size_t m, const size_t row, short int matrix[n][m], const short int val);
