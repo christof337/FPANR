@@ -33,7 +33,9 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
     // déclarations
     int bla;
     printf("\n---------COMPUTING MATRIX %d",index);
-    scanf("%d",&bla);
+    #if DEBUG
+    // scanf("%d",&bla);
+    #endif
     int i,j,k;
     double (*A)[n][n], (*L)[n][n], (*U)[n][n], (*P)[n][n];
     double (*B)[n], (*X)[n], (*Y)[n];
@@ -45,7 +47,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
     matrix_alloc(n, n, &U);
     matrix_alloc(n,n,&P);
     array_alloc(n,&B);
-    matrix_alloc(n,n,&Ainv);
+    matrix_alloc(n, n, &Ainv);
     array_alloc(n,&X);
     array_alloc(n,&Y);
 
@@ -113,7 +115,9 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
     double max;
     size_t independantSet[n][2];
     /* ------------------------------- */
-    scanf("%d",&bla);
+    #if DEBUG
+    // scanf("%d",&bla);
+    #endif
     switch ( algorithm ) {
         case IA_LU:
             /*      LU decomposition call      */
@@ -122,10 +126,13 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
             break;
         case IA_HUNG:
             printf("\nGaussjordanpivot : ");
-            scanf("%d",&bla);
             gaussJordanPivot(n, n, *A, isFpanr, strategy);
+            #if DEBUG
+            printf("\nend pivot");
+            fflush(stdout);
+            #endif
             break;
-            printf("\nHungarian decomposition (Munkres) :\n");
+           /* printf("\nHungarian decomposition (Munkres) :\n");
                 // scanf("%d",&bla);
             hungarian(n,n,*A, independantSet, isFpanr);
             printf("\nEnd of hung");
@@ -155,7 +162,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
                     break;
             }
 
-            break;
+            break;*/
     }
     /* ------------------------------- */
 
@@ -256,6 +263,8 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
         free(test);
     #endif // DEBUG
     } else if (algorithm == IA_HUNG ) {
+        printf("\neventually inverting the matrix : \n");
+        fflush(stdout);
         gaussJordanInversion(n, n, *A, *Ainv, isFpanr, strategy);
        // affichages finaux
         if(isFpanr) {
@@ -282,7 +291,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
     //#if VERBOSE
             // printf("\n\n[A_INV] with solve: \n");
             // matrix_print_fpanr(n, n, *Ainv);
-            gaussJordanInversion(n, n, *A, *Ainv, isFpanr, strategy);
+           // gaussJordanInversion(n, n, *A, *Ainv, isFpanr, strategy);
             printf("\n\n[A_INV]: \n");
             matrix_print_fpanr(n, n, *Ainv);
     //#endif // VERBOSE
@@ -565,24 +574,41 @@ char * buildFileName(enum OUTPUT_MATRIX OM, size_t n, short int index, enum PIVO
   Fin Gauss-Jordan */
 void gaussJordanPivot(const size_t n, const size_t m, double A[n][m], const short int isFpanr, const enum PIVOT_STRATEGY strategy) {
     int r = 0;
-    size_t k;
+    // size_t k;
     double max/*, ptr[m]*/;
     size_t maxI, maxJ;
     int maxPrec, prec;
     size_t independantSet[n][2];
     for ( int j = 0 ; j < m ; ++j ) {
         printf("\n%d : Before hung \n",j);
-        scanf("%d",&maxPrec);
+        #if DEBUG
+        // scanf("%d",&maxPrec);
+        #endif
         hungarian(n,n,A, independantSet, isFpanr);
+        #if DEBUG
+        for(size_t i = 0 ; i < n ; ++i ) {
+            printf("\n(%zu) : [%zu,%zu] = %f",i, independantSet[i][0],independantSet[i][1], A[independantSet[i][0]][independantSet[i][1]]);
+            fflush(stdout);
+        }
+        #endif
         printf("\nafter hung \n");
-        scanf("%d",&maxPrec);
+        #if DEBUG
+        // scanf("%d",&maxPrec);
         // we got S
+        printf("\nPSMAX?%d",strategy==PS_MAX);
+        printf("\nPSMAXPREC?%d",strategy==PS_MAX_PRECISION);
+        fflush(stdout);
+        #endif
         switch ( strategy ) {
             case PS_MAX:
                 // selecting the pivot of maximum magnitude (not in S)
                 max = FPANR_ZERO;
                 for ( size_t i = 0 ; i < n ; ++i ) {
                     for ( size_t j = 0 ; j < m ; ++j ) {
+                        #if DEBUG
+                        printf("\nchecking (%zu,%zu) for [%F] \n",i,j,A[i][j]);
+                        fflush(stdout);
+                        #endif
                         if ( A[i][j] > max && !isInZu(n,independantSet,i,j)) {
                             max = A[i][j];
                             maxI = i;
@@ -597,6 +623,10 @@ void gaussJordanPivot(const size_t n, const size_t m, double A[n][m], const shor
                 assert(isFpanr /*Error : should use FPANR when computing max precision pivot strategy*/);
                 maxPrec = 0;
                 for ( size_t i = 0 ; i < n ; ++i ) {
+                    #if DEBUG
+                    printf("\nchecking (%zu,%zu) for [%zu] \n",independantSet[i][0],independantSet[i][1],i);
+                    fflush(stdout);
+                    #endif
                     prec = getPrecFromFpanrDouble(A[independantSet[i][0]][independantSet[i][1]]);
                     if ( prec > maxPrec ) {
                         maxPrec = prec;
@@ -609,18 +639,10 @@ void gaussJordanPivot(const size_t n, const size_t m, double A[n][m], const shor
                 // r = maxI;
                 break;
         }
-        /*        case IA_HUNG:
-        printf("\nHungarian decomposition (Munkres) :\n");
-        // scanf("%d",&bla);
-        hungarian(n,n,*A, independantSet);
-        printf("\nEnd of hung");
+        #if DEBUG
+        printf("\nafter switch \n");
         fflush(stdout);
-        for(size_t i = 0 ; i < n ; ++i ) {
-            printf("\n(%zu) : [%zu,%zu] = %f",i, independantSet[i][0],independantSet[i][1], (*A)[independantSet[i][0]][independantSet[i][1]]);
-            fflush(stdout);
-        }
-        
-        */
+        #endif
         // rechercher max(|A[i,j]|
         // max = FPANR_ZERO;
         // for ( int i = r ; i < n ; ++i ) {
@@ -630,9 +652,17 @@ void gaussJordanPivot(const size_t n, const size_t m, double A[n][m], const shor
         //     }
         // }
 
-        if ( max != FPANR_ZERO ) {
-            manualPivoting(n,m,A,max,k,j,r);
+        if ( isFpanr?(cmpFpanrDouble(max, FPANR_ZERO) != 0):(max!=FPANR_ZERO)) {
+            #if DEBUG
+            printf("\nbefore manual Pivoting \n");
+            fflush(stdout);
+            #endif
+            manualPivoting(n,m,A,max,maxI,maxJ,r);
             r+=1;
+            #if DEBUG
+            printf("\nafter manual pivoting \n");
+            fflush(stdout);
+            #endif
            /* r += 1;
             // diviser la ligne K par A[k][j]
             for ( size_t l = 0 ; l < m ; ++l ) {
@@ -656,22 +686,41 @@ void gaussJordanPivot(const size_t n, const size_t m, double A[n][m], const shor
 
 void manualPivoting(const size_t n, const size_t m, double A[n][m], const double pivotValue, const size_t currentLine, const size_t currentColumn, const size_t lastPivotLine) {
     double ptr[m];
+    #if DEBUG
+    printf("\nstepx");
+    printf("\nn=%zu, m=%zu, pivotValue=%F, currentLine=%zu, currentColumn=%zu, lastPivotLine=%zu",n,m,pivotValue,currentLine,currentColumn,lastPivotLine);
+    fflush(stdout);
+    #endif
     // diviser la ligne K (currentLine) par A[k][j] (pivotValue)
     for ( size_t l = 0 ; l < m ; ++l ) {
         A[currentLine][l] /= pivotValue;
     }
+    #if DEBUG
+    printf("\nstepy");
+    fflush(stdout);
+    #endif
     // échanger les lignes k (currentLine) et r (lastPivotLine)
     array_copy(n, A[currentLine], ptr);
     array_copy(n, A[lastPivotLine], A[currentLine]);
     array_copy(n, ptr, A[lastPivotLine]);
+
+    #if DEBUG
+    printf("\nstepz");
+    fflush(stdout);
+    #endif
     for(size_t i = 0 ; i < n ; ++i ) {
         if ( i != lastPivotLine ) {
             // Soustraire à la ligne i la ligne r multipliée par A[i,j] (de façon à annuler A[i,j])
             for ( size_t l = 0 ; l < m ; ++l ) {
-                A[i][l] -= A[lastPivotLine][l]*A[i][currentColumn];
+                A[i][l] -= (A[lastPivotLine][l]*A[i][currentColumn]);
             }
         }
     }
+
+    #if DEBUG
+    printf("\nsuccess");
+    fflush(stdout);
+    #endif
 }
 
 // invert the matrix A and put the result in Ainv
@@ -691,9 +740,20 @@ void gaussJordanInversion(const size_t n, const size_t m, const double A[n][m], 
             }
         }
     }
+    matrix_print_fpanr(n,m*2,B);
     gaussJordanPivot(n, m*2, B, isFpanr, strategy);
-    for(int i = 0 ; i < n ; ++i ) {
-        for ( int j = 0 ; j < m ; ++j ) {
+    matrix_print_fpanr(n,m*2,B);
+    #if DEBUG
+    printf("\nend pivot inversion");
+    fflush(stdout);
+    #endif
+    for(size_t i = 0 ; i < n ; ++i ) {
+        for ( size_t j = 0 ; j < m ; ++j ) {
+            #if DEBUG
+            printf("\n[%zu,%zu] B=%F",i,j,B[i][j+m]);
+            fflush(stdout);
+            #endif
+            // FIXME Ainv seems to be impossible to write into
             Ainv[i][j] = B[i][j+m];
         }
     }

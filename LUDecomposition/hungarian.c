@@ -10,10 +10,10 @@
 
 #define dtfp(v) doubleToFpanr(v)
 #define fptd(v) fpanrToDouble(v)
-// #define FPANR_ZERO isFpanr?dtfp(0.0):0.0
-// #define FPANR_ONE isFpanr?dtfp(1.0):1.0
-#define FPANR_ZERO 0.0
-#define FPANR_ONE 1.0
+#define FPANR_ZERO isFpanr?dtfp(0.0):0.0
+#define FPANR_ONE isFpanr?dtfp(1.0):1.0
+// #define FPANR_ZERO 0.0
+// #define FPANR_ONE 1.0
 #define TO_FP(v) isFpanr?fptd(v):v
 
 #define TRUE 1
@@ -22,6 +22,26 @@
 #define DEBUG
 
 enum HUNG_STEPS{HS_PRELIMINARIES, HS_ONE, HS_TWO, HS_THREE, HS_END};
+
+/**
+ * Print a matrix to stdout
+ * @param x number of lines
+ * @param y number of columns
+ * @param matrix the matrix to print
+ */
+/*void matrix_print_fpanr (const size_t x, const size_t y, const double matrix[x][y])
+{
+  for(size_t i=0; i<x; ++i)
+  {
+    for(size_t j=0; j<y; ++j)
+    {
+      char * chaine = fpanrDoubleToStr(matrix[i][j]);
+      printf ( "%s\t", chaine );
+      free(chaine);
+    }
+    printf("\n");
+  }
+}*/
 
 int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t independantSet[MIN(n,m)][2], short int isFpanr) {
   double matrix[n][m];
@@ -37,6 +57,7 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
   enum HUNG_STEPS state = HS_PRELIMINARIES;
   size_t cpt;
   int bla;
+  size_t index;
 
   #ifdef DEBUG
     printf("stepA\n");
@@ -93,7 +114,7 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
       for ( i = 0 ; i < n ; ++i ) {
         for ( j = 0 ; j < m ; ++j ) {
           // consider a zero Z of the matrix
-          if (TO_FP(matrix[i][j])==FPANR_ZERO) {
+          if (cmpFpanrDouble(matrix[i][j],FPANR_ZERO) == 0 ) {
             // if there is no starred zero in its row
             isStarred = rowContainsTrue(n,m,i,starred);
             // and none in its column
@@ -116,8 +137,10 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
       // then cover every column containing a starred zero
       for ( j = 0 ; j < m ; ++j ) {
         isStarred = columnContainsTrue(n,m,j,starred);
-        printf("\nisCovered=%d",isCovered);
-        scanf("%hd",&bStep1);
+        #ifdef DEBUG
+        printf("\nisCovered=%hd",isCovered);
+        // scanf("%hd",&bStep1);
+        #endif
         isCovered = isCovered && isStarred;
         if (isStarred) {
           coveredColumns[j] = TRUE;
@@ -147,9 +170,8 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
         isCovered = FALSE;
         for ( i = 0 ; i < n ; ++i ) {
           for ( j = 0 ; j < m ; ++j ) {
-            printf("%f ",matrix[i][j]);
-            // choose a non-covered zero
           #ifdef DEBUG
+            printf("%f ",matrix[i][j]);
             printf("\nStep1:%zu %zu",i,j);
             cusPrintA(n,coveredRows);
             cusPrintA(m,coveredColumns);
@@ -157,23 +179,25 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
             fflush(stdout);
             // scanf("%d",&bla);
           #endif
-            char * chaine = fpanrDoubleToStr(matrix[i][j]);
-            printf("\n!%s vs %3.53f ? %d vs %d\n",chaine, TO_FP(matrix[i][j]),matrix[i][j] == dtfp(FPANR_ZERO), 1==2);
-            free(chaine);
-            if (TO_FP(matrix[i][j]) == FPANR_ZERO && coveredRows[i] == FALSE && coveredColumns[j] == FALSE) {
-          #ifdef DEBUG
-            printf("\nWAZAAAAAAAAa:%zu %zu",i,j);
-            cusPrintA(n,coveredRows);
-            cusPrintA(m,coveredColumns);
-            cusPrintM(n,m,starred);
-            fflush(stdout);
-            // scanf("%d",&bla);
-          #endif
+            // char * chaine = fpanrDoubleToStr(matrix[i][j]);
+            // printf("\n!%s vs %3.53f ? %d vs %d\n",chaine, TO_FP(matrix[i][j]),cmpFpanrDouble(matrix[i][j],FPANR_ZERO)==0, 1==2);
+            // free(chaine);
+            // choose a non-covered zero
+          //  if (TO_FP(matrix[i][j]) == FPANR_ZERO && coveredRows[i] == FALSE && coveredColumns[j] == FALSE) {
+            if (cmpFpanrDouble(matrix[i][j], FPANR_ZERO) == 0 && coveredRows[i] == FALSE && coveredColumns[j] == FALSE) {
+            #ifdef DEBUG
+              printf("\nWAZAAAAAAAAa:%zu %zu",i,j);
+              cusPrintA(n,coveredRows);
+              cusPrintA(m,coveredColumns);
+              cusPrintM(n,m,starred);
+              fflush(stdout);
+              // scanf("%d",&bla);
+            #endif
               // and prime it
               primed[i][j] = TRUE;
-                // consider the row containing it (i)
+              // consider the row containing it (i)
               isStarred = rowContainsTrue(n,m,i,starred);
-                // if there is no starred zero in this row
+              // if there is no starred zero in this row
               if ( !isStarred ) {
                 // go at once to step 2
                 bStep1 = FALSE;
@@ -190,19 +214,19 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
               } // starred 0 is this row?
             } // non covered zero ?
           } // for columns
-        }
+        } // for lines
         if(bStep1) {
           isCovered = TRUE;
           for ( i = 0 ; i < n && isCovered ; ++i ) {
             for (j = 0 ; j < m && isCovered ; ++j ) {
-              if ( TO_FP(matrix[i][j]) == FPANR_ZERO && coveredRows[i] == FALSE && coveredColumns[j] == FALSE) {
+              if ( cmpFpanrDouble(matrix[i][j], FPANR_ZERO) == 0 && coveredRows[i] == FALSE && coveredColumns[j] == FALSE) {
                 isCovered = FALSE;
               }
             }
           } 
           bStep1 = !isCovered;
         }
-      } // repeat until all zeros are covered
+      } // repeat until all zeros are covered (bStep1)
       if ( state == HS_ONE) 
         state = HS_THREE;
       // end of step1
@@ -216,12 +240,8 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
       //              STEP    2
     // --------------------------------------------------------
     case HS_TWO:
+      memset( sequence, 33, n*2*sizeof(size_t) );
       // STEP 2
-      #ifdef DEBUG
-        printf("step2\n");
-        // scanf("%d",&bStep1);
-        fflush(stdout);
-      #endif
       isFound = FALSE;
       for ( i = 0 ; i < n && !isFound ; ++i ) {
         for ( j = 0 ; j < m && !isFound; ++j ) {
@@ -233,10 +253,10 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
         }
       }
       isStarred = TRUE;
-      size_t index = 1;
+      index = 1;
       while ( isStarred ) {
+        cusPrintMZu(index,2,sequence);
         isFound = FALSE;
-        zRow = sequence[index-1][0];
         zColumn = sequence[index-1][1];
         for ( i = 0 ; i < n && !isFound ; ++i ) {
           if ( starred[i][zColumn] == TRUE ) {
@@ -247,12 +267,10 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
           }
         }
         zRow = sequence[index-1][0];
-        zColumn = sequence[index-1][1];
-
         if ( isFound ) {
           isFound = FALSE;
           for ( j = 0 ; j < m && !isFound ; ++j ) {
-            if ( primed[i][j] == TRUE ) {
+            if ( primed[zRow][j] == TRUE ) {
               sequence[index][0] = zRow;
               sequence[index][1] = j;
               index++;
@@ -280,17 +298,18 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
         }
       }
       for ( i = 0 ; i < n ; ++i ) {
-          // erase all primes
+        // erase all primes
         setRow(n,m,i,primed,FALSE);
-          // uncover every row
+        // uncover every row
         coveredRows[i] = FALSE;
       }
+      // cover every column ...
       for( j = 0 ; j < m ; ++j ) {
+        // containing a 0*
         if ( columnContainsTrue(n, m, j, starred) ) {
           coveredColumns[j] = TRUE;
         }
       }
-
       isCovered = TRUE;
       for( j = 0 ; j < m && isCovered ; ++j ) {
         isCovered = isCovered && isCoveredColumn(m,j,coveredColumns);
@@ -318,7 +337,7 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
         fflush(stdout);
         for ( i = 0 ; i < n ; ++i ) {
           for( j = 0 ; j < m ; ++j ) {
-            assert(matrix[i][j] != FPANR_ZERO || (coveredRows[i] || coveredColumns[j]) 
+            assert(cmpFpanrDouble(matrix[i][j], FPANR_ZERO) != 0 || (coveredRows[i] || coveredColumns[j]) 
             /* "At this point, all the zeros of the matrix are covered"*/);
           }
         }
@@ -444,14 +463,23 @@ short int isCoveredColumn(const size_t m, const size_t column, const short int m
 
 void cusPrintA(const size_t n, const short int a[n]) {
   for ( size_t i = 0 ; i < n ; ++i ) {
-    printf("%d\t",a[i]);
+    printf("%hd\t",a[i]);
   }
 }
 
 void cusPrintM(const size_t n, const size_t m, const short int mat[n][m]) {
   for (size_t i = 0 ; i < n ; ++i ) {
     for (size_t j = 0 ; j < m ; ++j ) {
-      printf("%d\t",mat[i][j]);
+      printf("%hd\t",mat[i][j]);
+    }
+    printf("\n");
+  }
+}
+
+void cusPrintMZu(const size_t n, const size_t m, const size_t mat[n][m]) {
+  for (size_t i = 0 ; i < n ; ++i ) {
+    for (size_t j = 0 ; j < m ; ++j ) {
+      printf("%zu\t",mat[i][j]);
     }
     printf("\n");
   }

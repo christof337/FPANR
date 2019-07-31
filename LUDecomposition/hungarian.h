@@ -15,4 +15,5 @@ short int isCoveredColumn(const size_t m, const size_t column, const short int m
 void cusPrintA(const size_t n, const short int a[n]);
 void cusPrintM(const size_t n, const size_t m, const short int mat[n][m]);
  
+void cusPrintMZu(const size_t n, const size_t m, const size_t mat[n][m]);
 #endif // HUNGARIAN_H
