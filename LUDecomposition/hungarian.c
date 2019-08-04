@@ -19,7 +19,7 @@
 #define TRUE 1
 #define FALSE 0
 
-#define DEBUG
+//#define DEBUG
 
 enum HUNG_STEPS{HS_PRELIMINARIES, HS_ONE, HS_TWO, HS_THREE, HS_END};
 
@@ -45,7 +45,7 @@ enum HUNG_STEPS{HS_PRELIMINARIES, HS_ONE, HS_TWO, HS_THREE, HS_END};
 
 int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t independantSet[MIN(n,m)][2], short int isFpanr) {
   double matrix[n][m];
-  memcpy(matrix, inputMat, sizeof(double)*n*m);
+  memcpy(matrix, inputMat, sizeof(double)*(n*m));
   double minH;
   short int starred[n][m], coveredRows[n], coveredColumns[m], primed[n][m];
   short int isStarred = FALSE, isFound = FALSE, isCovered = FALSE, isMin = FALSE;
@@ -163,7 +163,7 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
       while(bStep1) {
         // STEP 1
         #ifdef DEBUG
-          printf("Step1\n");
+          printf("\n--------------\nSTEP1\n");
           // scanf("%d",&bla);
           fflush(stdout);
         #endif
@@ -240,7 +240,7 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
       //              STEP    2
     // --------------------------------------------------------
     case HS_TWO:
-      memset( sequence, 33, n*2*sizeof(size_t) );
+      printf("\n--------------\nSTEP2\n");
       // STEP 2
       isFound = FALSE;
       for ( i = 0 ; i < n && !isFound ; ++i ) {
@@ -331,7 +331,7 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
     // --------------------------------------------------------
     case HS_THREE:
       #ifdef DEBUG
-        printf("Step3\n");
+        printf("\n--------------\nSTEP3\n");
         cusPrintA(n,coveredRows);
         cusPrintA(m,coveredColumns);
         fflush(stdout);

@@ -17,7 +17,7 @@
 // #define WRITE_Y_IN_FILE
 #define WRITE_A_INV_IN_FILE
 
-#define DEBUG 1
+#define DEBUG 0
 
 #define VERBOSE 1
 
@@ -186,6 +186,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
             matrix_print_fpanr(n,n,*L);
     #endif // VERBOSE
             fileName = buildFileName(OM_L, n, index, strategy, algorithm);
+            assert(fileName != NULL);
             fpanrDMatToFile(n, n, *L, fileName);
             free(fileName);
 
@@ -194,6 +195,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
             matrix_print_fpanr(n,n,*U);
     #endif // VERBOSE
             fileName = buildFileName(OM_U, n, index, strategy, algorithm);
+            assert(fileName != NULL);
             fpanrDMatToFile(n, n, *U, fileName);
             free(fileName);
 
@@ -203,6 +205,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
     #endif // VERBOSE
     #ifdef WRITE_Y_IN_FILE
             fileName = buildFileName(OM_Y, n, index, strategy, algorithm);
+            assert(fileName != NULL);
             fpanrDVecToFile(n, *Y, fileName);
             free(fileName);
     #endif // WRITE_Y_IN_FILE
@@ -213,6 +216,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
     #endif // VERBOSE
     #ifdef WRITE_X_IN_FILE
             fileName = buildFileName(OM_X, n, index, strategy, algorithm);
+            assert(fileName != NULL);
             fpanrDVecToFile(n, *X, fileName);
             free(fileName);
     #endif // WRITE_X_IN_FILE
@@ -226,6 +230,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
     //#endif // VERBOSE
     #ifdef WRITE_A_INV_IN_FILE
             fileName = buildFileName(OM_A_INV, n, index, strategy, algorithm);
+            assert(fileName != NULL);
             fpanrDMatToFile(n, n, *Ainv, fileName);
             free(fileName);
     #endif // WRITE_A_INV_IN_FILE
@@ -251,16 +256,15 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
     #endif // VERBOSE
         }
     #if DEBUG
-        double (*test)[n][n];
+        /*double (*test)[n][n];
         isFpanr?matrix_mult_fpanr(n,n,n,&test,*L,*U):matrix_mult(n, n, n, &test, *L, *U);
         isFpanr?matrix_print_fpanr(n,n,*test):matrix_print(n,n,*test);
-        free(*test);
+        free(test);
 
         printf("\n");
         isFpanr?matrix_mult_fpanr(n,n,n,&test,*L,*U):matrix_mult(n, n, n, &test, *P, *A);
         isFpanr?matrix_print_fpanr(n,n,*test):matrix_print(n,n,*test);
-
-        free(test);
+        free(test);*/
     #endif // DEBUG
     } else if (algorithm == IA_HUNG ) {
         printf("\neventually inverting the matrix : \n");
@@ -274,6 +278,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
     #endif // VERBOSE
     #ifdef WRITE_Y_IN_FILE
             fileName = buildFileName(OM_Y, n, index, strategy, algorithm);
+            assert(fileName != NULL);
             fpanrDVecToFile(n, *Y, fileName);
             free(fileName);
     #endif // WRITE_Y_IN_FILE
@@ -284,6 +289,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
     #endif // VERBOSE
     #ifdef WRITE_X_IN_FILE
             fileName = buildFileName(OM_X, n, index, strategy, algorithm);
+            assert(fileName != NULL);
             fpanrDVecToFile(n, *X, fileName);
             free(fileName);
     #endif // WRITE_X_IN_FILE
@@ -293,12 +299,22 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
             // matrix_print_fpanr(n, n, *Ainv);
            // gaussJordanInversion(n, n, *A, *Ainv, isFpanr, strategy);
             printf("\n\n[A_INV]: \n");
+            printf("DEBOUG\n"); // /!/
+            fflush(stdout);
             matrix_print_fpanr(n, n, *Ainv);
     //#endif // VERBOSE
     #ifdef WRITE_A_INV_IN_FILE
             fileName = buildFileName(OM_A_INV, n, index, strategy, algorithm);
+            assert(fileName != NULL);
+            #if DEBUG
+            printf("\nwriting A INV to file %s\n",fileName);
+            #endif
             fpanrDMatToFile(n, n, *Ainv, fileName);
-            free(fileName);
+            printf("DEBOUG2\n");
+            fflush(stdout);
+            free(fileName);  // /!/
+            printf("DEBOUG3\n");
+            fflush(stdout);
     #endif // WRITE_A_INV_IN_FILE
 
             printf("\n");
@@ -320,6 +336,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
     free(A);
     free(L);
     free(U);
+    free(P);
     free(B);
     free(X);
     free(Y);
@@ -359,7 +376,6 @@ int LU_decomposition(const size_t n, double U[n][n], double A[n][n], double L[n]
         }
         printf("\n");
     }
-    printf("%s %s %d",strategy==PS_MAX?"MAX":"MAX_PREC", isFpanr?"isFpanr":"!isFpanr", nbPivots );
     return nbPivots;
 }
 
@@ -573,14 +589,20 @@ char * buildFileName(enum OUTPUT_MATRIX OM, size_t n, short int index, enum PIVO
      Fin Pour
   Fin Gauss-Jordan */
 void gaussJordanPivot(const size_t n, const size_t m, double A[n][m], const short int isFpanr, const enum PIVOT_STRATEGY strategy) {
+    #if DEBUG
+    printf("\ngaussJordanPivot\n");
+    fflush(stdout);
+    #endif
     int r = 0;
     // size_t k;
     double max/*, ptr[m]*/;
     size_t maxI, maxJ;
     int maxPrec, prec;
     size_t independantSet[n][2];
+    matrix_print_fpanr(n,m,A);
     for ( int j = 0 ; j < m ; ++j ) {
         printf("\n%d : Before hung \n",j);
+        fflush(stdout);
         #if DEBUG
         // scanf("%d",&maxPrec);
         #endif
@@ -605,10 +627,6 @@ void gaussJordanPivot(const size_t n, const size_t m, double A[n][m], const shor
                 max = FPANR_ZERO;
                 for ( size_t i = 0 ; i < n ; ++i ) {
                     for ( size_t j = 0 ; j < m ; ++j ) {
-                        #if DEBUG
-                        printf("\nchecking (%zu,%zu) for [%F] \n",i,j,A[i][j]);
-                        fflush(stdout);
-                        #endif
                         if ( A[i][j] > max && !isInZu(n,independantSet,i,j)) {
                             max = A[i][j];
                             maxI = i;
@@ -658,7 +676,7 @@ void gaussJordanPivot(const size_t n, const size_t m, double A[n][m], const shor
             fflush(stdout);
             #endif
             manualPivoting(n,m,A,max,maxI,maxJ,r);
-            r+=1;
+            r = r + 1;
             #if DEBUG
             printf("\nafter manual pivoting \n");
             fflush(stdout);
@@ -686,6 +704,7 @@ void gaussJordanPivot(const size_t n, const size_t m, double A[n][m], const shor
 
 void manualPivoting(const size_t n, const size_t m, double A[n][m], const double pivotValue, const size_t currentLine, const size_t currentColumn, const size_t lastPivotLine) {
     double ptr[m];
+    double tmp;
     #if DEBUG
     printf("\nstepx");
     printf("\nn=%zu, m=%zu, pivotValue=%F, currentLine=%zu, currentColumn=%zu, lastPivotLine=%zu",n,m,pivotValue,currentLine,currentColumn,lastPivotLine);
@@ -693,16 +712,21 @@ void manualPivoting(const size_t n, const size_t m, double A[n][m], const double
     #endif
     // diviser la ligne K (currentLine) par A[k][j] (pivotValue)
     for ( size_t l = 0 ; l < m ; ++l ) {
-        A[currentLine][l] /= pivotValue;
+        A[currentLine][l] = A[currentLine][l] / pivotValue;
     }
     #if DEBUG
     printf("\nstepy");
     fflush(stdout);
     #endif
     // échanger les lignes k (currentLine) et r (lastPivotLine)
-    array_copy(n, A[currentLine], ptr);
-    array_copy(n, A[lastPivotLine], A[currentLine]);
-    array_copy(n, ptr, A[lastPivotLine]);
+    for(size_t l = 0 ; l < m ; ++l ) {
+        tmp = A[currentLine][l];
+        A[currentLine][l] = A[lastPivotLine][l];
+        A[lastPivotLine][l] = tmp;
+    }
+    // array_copy(m, A[currentLine], ptr);
+    // array_copy(m, A[lastPivotLine], A[currentLine]);
+    // array_copy(m, ptr, A[lastPivotLine]);
 
     #if DEBUG
     printf("\nstepz");
@@ -725,36 +749,53 @@ void manualPivoting(const size_t n, const size_t m, double A[n][m], const double
 
 // invert the matrix A and put the result in Ainv
 void gaussJordanInversion(const size_t n, const size_t m, const double A[n][m], double Ainv[n][m], const short int isFpanr, const enum PIVOT_STRATEGY strategy) {
+    const size_t height = m+m;
     // adding identity matrix to the end
-    double B[n][m*2];
+    double (*B)[n][height];
+    matrix_alloc(n,height,&B);
     for(int i = 0 ; i < n ; ++i ) {
-        for(int j = 0 ; j < m*2 ; ++j ) {
+        for(int j = 0 ; j < height ; ++j ) {
             if(j<m) {
-                B[i][j] = A[i][j];
+                (*B)[i][j] = A[i][j];
             } else {
                 if(i==j-m) {
-                    B[i][j] = FPANR_ONE;
+                    (*B)[i][j] = FPANR_ONE;
                 } else {
-                    B[i][j] = FPANR_ZERO;
+                    (*B)[i][j] = FPANR_ZERO;
                 }
             }
         }
     }
-    matrix_print_fpanr(n,m*2,B);
-    gaussJordanPivot(n, m*2, B, isFpanr, strategy);
-    matrix_print_fpanr(n,m*2,B);
+    printf("\ncéledébug\n");
+    fflush(stdout);
+    matrix_print_fpanr(n,height,*B);
+    gaussJordanPivot(n, height, *B, isFpanr, strategy);
     #if DEBUG
+    printf("\nblablabla?");
+    fflush(stdout);
+    matrix_print_fpanr(n,height,*B);
+    fflush(stdout);
     printf("\nend pivot inversion");
     fflush(stdout);
     #endif
     for(size_t i = 0 ; i < n ; ++i ) {
-        for ( size_t j = 0 ; j < m ; ++j ) {
+        for (size_t j = 0 ; j < m ; ++j ) {
             #if DEBUG
-            printf("\n[%zu,%zu] B=%F",i,j,B[i][j+m]);
+            printf("\nAA");
+            fflush(stdout);
+            printf("\nBB");
+            fflush(stdout);
+            printf("\n[%zu,%zu] B=%F",i,j,(*B)[i][j+m]);
             fflush(stdout);
             #endif
             // FIXME Ainv seems to be impossible to write into
-            Ainv[i][j] = B[i][j+m];
+            Ainv[i][j] = (*B)[i][j+m];
         }
     }
+
+    printf("\nwagadogou1");
+    fflush(stdout);
+    free(B);
+    printf("\nwagadogou2");
+    fflush(stdout);
 }

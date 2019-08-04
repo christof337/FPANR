@@ -303,6 +303,7 @@ void array_print_fpanr (const size_t x, const double array[x])
 	for(size_t i=0; i<x; ++i)
 	{
 		char * chaine = fpanrDoubleToStr(array[i]);
+		assert(chaine != NULL);
 		printf ( "%s\t", chaine );
 		free(chaine);
 	}
@@ -413,13 +414,17 @@ void matrix_mult_fpanr(const size_t n, const size_t m, const size_t p, double (*
  * @param y number of columns
  * @param matrix the matrix to print
  */
-void matrix_print_fpanr (const size_t x, const size_t y, const double matrix[x][y])
-{
+void matrix_print_fpanr (const size_t x, const size_t y, const double matrix[x][y]) {
 	for(size_t i=0; i<x; ++i)
 	{
 		for(size_t j=0; j<y; ++j)
 		{
+			printf("\nbefore %zu,%zu",i,j);
+			fflush(stdout);
+			printf(": %F : ",matrix[i][j]);
+			fflush(stdout);
 			char * chaine = fpanrDoubleToStr(matrix[i][j]);
+			assert(chaine != NULL);
 			printf ( "%s\t", chaine );
 			free(chaine);
 		}
