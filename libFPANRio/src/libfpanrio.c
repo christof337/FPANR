@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <float.h>
+#include <assert.h>
 
 #include "ieee754.h"
 
@@ -115,7 +116,7 @@ char * fpanrFloatToStr(const float fpanrVal) {
 	int p = getPrecFromFpanrFloat(fpanrVal);
 	float val = fpanrToFloat(fpanrVal);
 	size_t needed = snprintf(NULL, 0, "%*.e (%d)", Digs, val, p);
-	char  *buffer = malloc(needed+1);
+	char  *buffer = malloc((needed+1)*sizeof(char));
 	sprintf(buffer, "%.*e (%d)", Digs, val, p);
 	return buffer;
 }
@@ -154,7 +155,8 @@ int fpanrFVecToFile(const size_t n, const float array[n], const char * fileName)
 	fclose(fp);
 
 	// writing precisions
-	char * str = malloc((strlen(fileName)+strlen(".prec")) * sizeof(char));
+	char * str = malloc((strlen(fileName)+strlen(".prec")+1) * sizeof(char));
+	assert(str != NULL);
 	strcpy(str,fileName);
 	strcat(str, ".prec");
 	fp = fopen(str, "w");
@@ -177,7 +179,8 @@ int fpanrFVecToFile(const size_t n, const float array[n], const char * fileName)
 
 	// writing both
 	int Digs = OP_FLT_Digs;
-	str = malloc((strlen(fileName)+strlen(".fpanr")) * sizeof(char));
+	str = malloc((strlen(fileName)+strlen(".fpanr")+1) * sizeof(char));
+	assert(str != NULL);
 	strcpy(str,fileName);
 	strcat(str, ".fpanr");
 	fp = fopen(str, "w");
@@ -203,7 +206,8 @@ int fpanrFMatToFile(const size_t n, const size_t m, const float matrix[n][m], co
 	fclose(fp);
 
 	// writing precisions
-	char * str = malloc((strlen(fileName)+strlen(".prec")) * sizeof(char));
+	char * str = malloc((strlen(fileName)+strlen(".prec")+1) * sizeof(char));
+	assert(str != NULL);
 	strcpy(str,fileName);
 	strcat(str, ".prec");
 	fp = fopen(str, "w");
@@ -218,7 +222,8 @@ int fpanrFMatToFile(const size_t n, const size_t m, const float matrix[n][m], co
 	fclose(fp);
 	// writing both
 	int Digs = OP_FLT_Digs;
-	str = malloc((strlen(fileName)+strlen(".fpanr")) * sizeof(char));
+	str = malloc((strlen(fileName)+strlen(".fpanr")+1) * sizeof(char));
+	assert(str != NULL);
 	strcpy(str,fileName);
 	strcat(str, ".fpanr");
 	fp = fopen(str, "w");
@@ -276,6 +281,7 @@ int fpanrFileToFMat(const size_t n, const size_t m, float matrix[n][m], const ch
 
 	for ( size_t i = 0 ; i < n ; ++i ) {
 		str = malloc(sizeof(char) * maxLength);
+		assert(str != NULL);
 		token = fgets(str, maxLength, fp);
 		if (token == str) {
 			token = strtok(str, s);
@@ -353,7 +359,7 @@ char * fpanrDoubleToStr(const double fpanrVal) {
 	int p = getPrecFromFpanrDouble(fpanrVal);
 	double val = fpanrToDouble(fpanrVal);
 	size_t needed = snprintf(NULL, 0, "%.*e (%d)", Digs, val, p);
-	char  *buffer = malloc(needed+1);
+	char  *buffer = malloc((needed+1)*sizeof(char));
 	sprintf(buffer, "%.*e (%d)", Digs, val, p);
 	return buffer;
 }
@@ -369,7 +375,8 @@ int fpanrDVecToFile(const size_t n, const double array[n], const char * fileName
 	fclose(fp);
 
 	// writing precisions
-	char * str = malloc((strlen(fileName)+strlen(".prec")) * sizeof(char));
+	char * str = malloc((strlen(fileName)+strlen(".prec")+1) * sizeof(char));
+	assert(str != NULL);
 	strcpy(str,fileName);
 	strcat(str, ".prec");
 	fp = fopen(str, "w");
@@ -382,7 +389,8 @@ int fpanrDVecToFile(const size_t n, const double array[n], const char * fileName
 
 	// writing both	
 	int Digs = OP_DBL_Digs;
-	str = malloc((strlen(fileName)+strlen(".fpanr")) * sizeof(char));
+	str = malloc((strlen(fileName)+strlen(".fpanr")+1) * sizeof(char));
+	assert(str != NULL);
 	strcpy(str,fileName);
 	strcat(str, ".fpanr");
 	fp = fopen(str, "w");
@@ -395,36 +403,50 @@ int fpanrDVecToFile(const size_t n, const double array[n], const char * fileName
 }
 
 int fpanrDMatToFile(const size_t n, const size_t m, const double matrix[n][m], const char * fileName) {
+	printf("\nstep1");
+	fflush(stdout);
 	FILE *fp;
 
 	fp = fopen(fileName, "w");
+	assert(fp != NULL /* error while opening file */);
 	for(size_t i = 0 ; i < n ; ++i ) {
 		for ( size_t j = 0 ; j < m ; ++j ) {
 			fprintf(fp, "%f%c",fpanrToDouble(matrix[i][j]),DELIM);
 		}
 		fprintf(fp,"\n");
 	}
+	printf("\nstep2");
+	fflush(stdout);
 
 	fclose(fp);
 
 	// writing precisions
-	char * str = malloc((strlen(fileName)+strlen(".prec")) * sizeof(char));
+
+	printf("\nstep3");
+	fflush(stdout);
+	char str[strlen(fileName)+strlen(".prec")];
+	assert(str != NULL /* couldn't allocate memory for str */);
 	strcpy(str,fileName);
 	strcat(str, ".prec");
 	fp = fopen(str, "w");
+	assert(fp != NULL /* error while opening file */);
 	for(size_t i = 0 ; i < n ; ++i ) {
 		for ( size_t j = 0 ; j < m ; ++j ) {
 			fprintf(fp, "%d%c",getPrecFromFpanrDouble(matrix[i][j]),DELIM);
 		}
 		fprintf(fp,"\n");
 	}
-
-	free(str);
+	printf("\nstep4");
+	fflush(stdout);
+	//free(str);
+	printf("\nstep5");
+	fflush(stdout);
 	fclose(fp);
 
 	// writing both	
 	int Digs = OP_DBL_Digs;
-	str = malloc((strlen(fileName)+strlen(".fpanr")) * sizeof(char));
+	//str = malloc((strlen(fileName)+strlen(".fpanr")+1) * sizeof(char));
+	assert(str != NULL /* couldn't allocate memory for str */);
 	strcpy(str,fileName);
 	strcat(str, ".fpanr");
 	fp = fopen(str, "w");
@@ -435,7 +457,11 @@ int fpanrDMatToFile(const size_t n, const size_t m, const double matrix[n][m], c
 		fprintf(fp,"\n");
 	}
 
-	free(str);
+	printf("\nstep6");
+	fflush(stdout);
+	//free(str);
+	printf("\nstep7");
+	fflush(stdout);
 	fclose(fp);
 }
 
@@ -482,6 +508,7 @@ int fpanrFileToDMat(const size_t n, const size_t m, double matrix[n][m], const c
 
 	for ( size_t i = 0 ; i < n ; ++i ) {
 		str = malloc(sizeof(char) * maxLength);
+		assert(str != NULL);
 		token = fgets(str, maxLength, fp);
 		if (token == str) {
 			token = strtok(str, s);
@@ -507,6 +534,55 @@ int fpanrFileToDMat(const size_t n, const size_t m, double matrix[n][m], const c
 
 	return 0;
 }
+
+void d_sub(double_st * res, const double_st a, const double_st b) {
+#if DEBUG
+	printf("\t d_sub");
+#endif
+	int e1, e2, er;
+	int p1, p2;
+
+	frexp(a._value, &e1);
+	frexp(b._value, &e2);
+	res->_value = d_getVal(a, &p1) - d_getVal(b, &p2);
+
+	frexp(res->_value, &er);
+#if DEBUG
+	printf("\t setPrec %d - MAX((%d-%d),(%d-%d))",er,e1,p1,e2,p2);
+#endif
+	d_setPrec(res, er - MAX((e1 - p1), (e2 - p2)));
+}
+
+double _doublesub(double _a, double _b) {
+#if DEBUG
+	printf("\n_double_sub");
+#endif
+	//return a - b
+	double_st res, a, b;
+	a._value = _a;
+	b._value = _b;
+	d_sub(&res, a, b);
+	int prec = d_getPrec(res);
+	return res._value;
+	//return d_getVal(res, &prec);
+//	return _mca_dbin(a, b, (mpfr_bin)MP_SUB);
+}
+
+int cmpFpanrDouble(const double a, const double b) {
+	double valA, valB;
+	valA = fpanrToDouble(a);
+	valB = fpanrToDouble(b);
+
+	if ( fpanrToDouble(_doublesub(a,b)) == 0.0) {
+		return 0;
+	} else if ( fpanrToDouble(_doublesub(a,b)) > 0.0 ) {
+		return 1;
+	} else {
+		return -1;
+	}
+}
+
+
 
 // --------------------------------------
 

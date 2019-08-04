@@ -44,6 +44,8 @@ int fpanrDVecToFile(const size_t n, const double array[n], const char * fileName
 int fpanrDMatToFile(const size_t n, const size_t m, const double matrix[n][m], const char * fileName);
 int fpanrFileToDVec(const size_t n, double array[n], const char * fileName);
 int fpanrFileToDMat(const size_t n, const size_t m, double matrix[n][m], const char * fileName);
+double _doublesub(double _a, double _b);
+int cmpFpanrDouble(const double a, const double b);
 
 unsigned count_trailing_zeros(const unsigned long n) ;
 void f_setPrec(float_st * _this, int prec) ;
