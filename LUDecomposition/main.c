@@ -25,12 +25,21 @@ VERIFICARLO_BACKEND=FPANR verificarlo LUFacto.c main.c utils.c -lm -lfpanrio
 VERIFICARLO_BACKEND=FPANR verificarlo main.c utils.c LUFacto.c -lm -lfpanrio
 VERIFICARLO_BACKEND=FPANR ./a.out 3 1 hungarian
 
+// normal build with 3x3 matrix, hungarian and FPANR
 rm *.ll *.o a.out
 VERIFICARLO_BACKEND=FPANR verificarlo utils.c hungarian.c LUFacto.c main.c -lm -lfpanrio
 VERIFICARLO_BACKEND=FPANR verificarlo hungarian.c LUFacto.c main.c utils.c -lm -lfpanrio
 VERIFICARLO_BACKEND=FPANR verificarlo LUFacto.c main.c utils.c hungarian.c -lm -lfpanrio
 VERIFICARLO_BACKEND=FPANR verificarlo main.c utils.c hungarian.c LUFacto.c -lm -lfpanrio
 VERIFICARLO_BACKEND=FPANR ./a.out 3 1 hungarian
+
+// valgrind exec with 3x3 matrix, hungarian and FPANR
+rm *.ll *.o a.out
+VERIFICARLO_BACKEND=FPANR verificarlo utils.c hungarian.c LUFacto.c main.c -lm -lfpanrio
+VERIFICARLO_BACKEND=FPANR verificarlo hungarian.c LUFacto.c main.c utils.c -lm -lfpanrio
+VERIFICARLO_BACKEND=FPANR verificarlo LUFacto.c main.c utils.c hungarian.c -lm -lfpanrio
+VERIFICARLO_BACKEND=FPANR verificarlo main.c utils.c hungarian.c LUFacto.c -lm -lfpanrio
+VERIFICARLO_BACKEND=FPANR valgrind -v ./a.out 3 1 hungarian
 
 VERIFICARLO_BACKEND=FPANR ./a.out 3 1 LU
 VERIFICARLO_BACKEND=FPANR ./a.out 3 1 hungarian
@@ -104,10 +113,10 @@ int main(int argc, char *argv[]) {
 
     // up to here, files have been generated
     // let's sum them up shall we?
-
-    for(int i = 0 ; i < 4000 ; ++i ) {
-        printf("*");
-    }
+    
+    // for(int i = 0 ; i < 4000 ; ++i ) {
+    //     printf("*");
+    // }
 
     if ( isFpanr ) {
         // looping through strategies looks like a good place to start
@@ -128,18 +137,21 @@ void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int 
     char fileName[100];
     char * tmp;
     int prec;
+    double val, absA;
+    double matrixRef[n][n], perturbedMatrix[n][n]; // it will be used for comparison THROUGHOUT the rest of this function
     printf("\nmineprec\n");
     // on commence par déclarer le tableau qui contiendra les précisions
-    int * arrayPrec = malloc(sizeof(int)*MAX_PREC);
-    for ( size_t k = 0 ; k < MAX_PREC ; ++k ) 
+    int * arrayPrec = malloc(sizeof(int[MAX_PREC+1]));
+    for ( size_t k = 0 ; k <= MAX_PREC ; ++k ) {
         arrayPrec[k] = 0;
+    }
+    matrix_fill_fpanr(n,n,matrixRef);
+    matrix_fill_fpanr(n,n,perturbedMatrix);
 
     // chacune des cases du tableau va contenir le nombre d'éléments des matrices qui a la précision de son index
 
     // parcourons les fichiers shall we?
-    double val, absA;
     // first, the reference file
-    double matrixRef[n][n], perturbedMatrix[n][n]; // it will be used for comparison THROUGHOUT the rest of this function
     tmp = buildFileName(OM_A_INV, n, -1, strategy, algorithm);
     assert(tmp != NULL);
     strcpy(fileName, tmp);
@@ -157,11 +169,12 @@ void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int 
         for ( size_t i = 0 ; i < n ; ++i ) {
             for ( size_t j = 0 ; j < n ; ++j ) {
                 val =  matrixRef[i][j] - perturbedMatrix[i][j];
-                printf("\n[%zu][%zu] : ref:%d,pert:%d,dif:%d",i,j,getPrecFromFpanrDouble(matrixRef[i][j]),getPrecFromFpanrDouble(perturbedMatrix[i][j]),getPrecFromFpanrDouble(val));
-                printf("\n\t%.16e - %.16e = %.16e",fpanrToDouble(matrixRef[i][j]),fpanrToDouble(perturbedMatrix[i][j]),fpanrToDouble(matrixRef[i][j]-perturbedMatrix[i][j]));
+               // printf("\n[%zu][%zu] : ref:%d,pert:%d,dif:%d",i,j,getPrecFromFpanrDouble(matrixRef[i][j]),getPrecFromFpanrDouble(perturbedMatrix[i][j]),getPrecFromFpanrDouble(val));
+               // printf("\n\t%.16e - %.16e = %.16e",fpanrToDouble(matrixRef[i][j]),fpanrToDouble(perturbedMatrix[i][j]),fpanrToDouble(matrixRef[i][j]-perturbedMatrix[i][j]));
                 absA = isFpanr?myAbs(val):fabs(val);
-                printf(" (after abs %d)",getPrecFromFpanrDouble(absA));
+               // printf(" (after abs %d)",getPrecFromFpanrDouble(absA));
                 prec = MAX_PREC-getPrecFromFpanrDouble(absA);
+                assert(prec<=MAX_PREC && prec >= 0);
                 //prec = getPrecFromFpanrDouble(absA);
                 arrayPrec[prec] = arrayPrec[prec] + 1;
             }
@@ -169,7 +182,6 @@ void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int 
         free(tmp);
     }
     
-    printf("\n--------\nMine : size=%zu, strategy=%d,nb_matrix=%d,isFpanr=%d :\n",n,strategy,nb_matrix,isFpanr);
     for ( size_t k = 0 ; k < MAX_PREC ; ++k ) {
         printf("\n[%zu]:%d\t",k,arrayPrec[k]);
         for ( int m = 0 ; m < arrayPrec[k] ; ++m) {
@@ -177,7 +189,6 @@ void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int 
         }
     }
     printf("\n\n");
-    matrix_print_fpanr (n, n, matrixRef);
 
 
     FILE * fp;
@@ -188,6 +199,7 @@ void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int 
     if ( fp == NULL ) {
         fprintf(stderr, "\nError while opening file %s. Exiting...\n",fileName);
     } else {
+        printf("\nWriting final strategy mining file to '%s'",fileName);
         for ( size_t k = 0 ; k < MAX_PREC ; ++k ) {
             fprintf(fp, "%zu\t%d\n",k,arrayPrec[k]);
         }

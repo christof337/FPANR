@@ -240,7 +240,9 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
       //              STEP    2
     // --------------------------------------------------------
     case HS_TWO:
-      printf("\n--------------\nSTEP2\n");
+      #ifdef DEBUG
+        printf("\n--------------\nSTEP2\n");
+      #endif // DEBUG
       // STEP 2
       isFound = FALSE;
       for ( i = 0 ; i < n && !isFound ; ++i ) {
@@ -255,7 +257,9 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
       isStarred = TRUE;
       index = 1;
       while ( isStarred ) {
+        #ifdef DEBUG
         cusPrintMZu(index,2,sequence);
+        #endif // DEBUG
         isFound = FALSE;
         zColumn = sequence[index-1][1];
         for ( i = 0 ; i < n && !isFound ; ++i ) {
