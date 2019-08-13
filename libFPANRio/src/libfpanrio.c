@@ -403,8 +403,6 @@ int fpanrDVecToFile(const size_t n, const double array[n], const char * fileName
 }
 
 int fpanrDMatToFile(const size_t n, const size_t m, const double matrix[n][m], const char * fileName) {
-	printf("\nstep1");
-	fflush(stdout);
 	FILE *fp;
 
 	fp = fopen(fileName, "w");
@@ -415,15 +413,10 @@ int fpanrDMatToFile(const size_t n, const size_t m, const double matrix[n][m], c
 		}
 		fprintf(fp,"\n");
 	}
-	printf("\nstep2");
-	fflush(stdout);
 
 	fclose(fp);
 
 	// writing precisions
-
-	printf("\nstep3");
-	fflush(stdout);
 	char str[strlen(fileName)+strlen(".prec")];
 	assert(str != NULL /* couldn't allocate memory for str */);
 	strcpy(str,fileName);
@@ -436,11 +429,7 @@ int fpanrDMatToFile(const size_t n, const size_t m, const double matrix[n][m], c
 		}
 		fprintf(fp,"\n");
 	}
-	printf("\nstep4");
-	fflush(stdout);
 	//free(str);
-	printf("\nstep5");
-	fflush(stdout);
 	fclose(fp);
 
 	// writing both	
@@ -457,11 +446,7 @@ int fpanrDMatToFile(const size_t n, const size_t m, const double matrix[n][m], c
 		fprintf(fp,"\n");
 	}
 
-	printf("\nstep6");
-	fflush(stdout);
 	//free(str);
-	printf("\nstep7");
-	fflush(stdout);
 	fclose(fp);
 }
 
@@ -510,7 +495,8 @@ int fpanrFileToDMat(const size_t n, const size_t m, double matrix[n][m], const c
 		str = malloc(sizeof(char) * maxLength);
 		assert(str != NULL);
 		token = fgets(str, maxLength, fp);
-		if (token == str) {
+		if (token == str) { // on success, fgets return the same str parameter 
+			// read success
 			token = strtok(str, s);
 
 			cpt = 0;
