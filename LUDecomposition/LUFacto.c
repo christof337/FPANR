@@ -24,12 +24,12 @@
 #define FPANR_ZERO isFpanr?dtfp(0.0):0.0
 #define FPANR_ONE isFpanr?dtfp(1.0):1.0
 
-#define DEFAULT_PERTURBATION 21
+#define DEFAULT_PERTURBATION 40
 
 extern enum PIVOT_STRATEGY strategy;
 extern enum OUTPUT_MATRIX OM;
 
-int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRATEGY strategy, enum INVERSION_ALGORITHM algorithm ) {
+int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRATEGY strategy, enum INVERSION_ALGORITHM algorithm, enum INPUT_MATRIX matrix ) {
     // déclarations
     int bla;
     #if DEBUG
@@ -74,16 +74,32 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
 
     // remplissage
     if(isFpanr) {
-        if ( n == 3 )
-            fill_fig1_fpanr(*A);
-        else 
-            hilbert_fpanr(n,n,*A);
+        switch(matrix) {
+            case MAT_1:
+                fill_fig1_fpanr(*A);
+                break;
+            case MAT_2:
+                fill_fig2_fpanr(*A);
+                break;
+            case MAT_HILBERT:
+            default:
+                hilbert_fpanr(n,n,*A);
+                break;
+        }
         arrayFillExp_fpanr(n,*B);
     } else {
-        if ( n == 3 )
-            fill_fig1(*A);
-        else 
-            hilbert(n,n,*A);
+        switch(matrix) {
+            case MAT_1:
+                fill_fig1(*A);
+                break;
+            case MAT_2:
+                fill_fig2(*A);
+                break;
+            case MAT_HILBERT:
+            default:
+                hilbert(n,n,*A);
+                break;
+        }
         arrayFillExp(n,*B);
     }
 
@@ -143,7 +159,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
             }
                 // we got S
             switch ( strategy ) {
-                case PS_MAX:
+                case PS_MAX_MAG_NOT_IN_S:
                     // selecting the pivot of maximum magnitude (not in S)
                     max = FPANR_ZERO;
                     for ( i = 0 ; i < n ; ++i ) {
@@ -349,7 +365,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
 int LU_decomposition(const size_t n, double U[n][n], double A[n][n], double L[n][n], short int isFpanr, double P[n][n], enum PIVOT_STRATEGY strategy) {
     int nbPivots = n;
     for(int j=0; j<n; ++j) {
-        nbPivots += LUPivot(n, A, P, j, isFpanr, strategy);
+        nbPivots += LUPivot(n, A, P, j, nbPivots-n, isFpanr, strategy);
         for(int i=0; i<n; ++i) {
             if(i<=j) {
                 U[i][j]=A[i][j];
@@ -382,56 +398,76 @@ int LU_decomposition(const size_t n, double U[n][n], double A[n][n], double L[n]
  *        containing column indexes where the permutation matrix has "1". The last element P[N]=S+N, 
  *        where S is the number of row exchanges needed for determinant computation, det(P)=(-1)^S    
  */
-int LUPivot(int n, double A[n][n], /*double tol,*/ double P[n][n], int currentRow, short int isFpanr, enum PIVOT_STRATEGY strategy) {
-int i, j, k, imax; 
-double maxA, ptr[n], absA;
-int hasPivoted = 0;
-int prec = 0, maxPrec = 0;
+int LUPivot(int n, double A[n][n], /*double tol,*/ double P[n][n], int currentColumn, int lastPivotLine, short int isFpanr, enum PIVOT_STRATEGY strategy) {
+    int i, j, k, imax; 
+    double maxA, ptr[n], absA;
+    int hasPivoted = 0;
+    int prec = 0, maxPrec = 0;
+    size_t independantSet[n][2];
 
-maxA = FPANR_ZERO;
-imax = currentRow;
+    maxA = FPANR_ZERO;
+    maxPrec = 0;
+    imax = lastPivotLine-1;
 
-for (k = currentRow; k < n; k++) {
-    switch(strategy) {
-        case PS_MAX:
-            // maximum magnitude strategy
-            absA = isFpanr?myAbs(A[k][currentRow]):fabs(A[k][currentRow]);
-            if (absA > maxA) { 
-                maxA = absA;
-                imax = k;
-            }
-            break;
-        case PS_MAX_PRECISION:
-            // maximum precision strategy
-            if (isFpanr) {
-                prec = getPrecFromFpanrDouble(A[k][currentRow]);
-                if ( prec > maxPrec ) {
+    hungarian(n,n,A, independantSet, isFpanr);
+
+    //for (k = currentRow; k < n; k++) {
+    for ( i = 0 ; i < n ; ++i ) {
+        k = independantSet[i][0];
+        j = independantSet[i][1];
+        // TODO : ça n'a pas de sens de faire varier les stratégies de pivot...
+        switch(strategy) {
+            case PS_MAX_MAG_NOT_IN_S:
+                // maximum magnitude strategy not in S
+                if (imax == lastPivotLine-1) {
+                    for(i = lastPivotLine ; i < n ; ++i ) {
+                        absA = isFpanr?myAbs(A[i][currentColumn]):fabs(A[i][currentColumn]);
+                        if ( absA > maxA && !isInZu(n,independantSet,i,currentColumn)) {
+                            maxA = absA;
+                            imax = i;
+                        }
+                    }
+                }
+                break;
+            case PS_MAX_MAG_IN_S:
+                absA = isFpanr?myAbs(A[k][j]):fabs(A[k][j]);
+                if (absA > maxA && k >= lastPivotLine && j == currentColumn) { 
+                    maxA = absA;
+                    imax = k;
+                }
+                break;
+            case PS_MAX_PRECISION:
+                // maximum precision strategy (in S)
+                assert(isFpanr /*Error : should use FPANR when computing max precision pivot strategy*/);
+                prec = getPrecFromFpanrDouble(A[k][j]);
+                if ( prec > maxPrec && k >= lastPivotLine && j == currentColumn) {
                     maxPrec = prec;
                     imax = k;
                 }
-            } else {
-                fprintf(stderr, "\nError : should use FPANR when computing max precision pivot strategy");
-                return 0;
-            }
-            break;
+                break;
+                    // prec = getPrecFromFpanrDouble(A[k][currentColumn]);
+                    // if ( prec > maxPrec ) {
+                    //     maxPrec = prec;
+                    //     imax = k;
+                    // }
+        }
     }
-}
-    //if (maxA < Tol) return 0; //failure, matrix is degenerate
+        //if (maxA < Tol) return 0; //failure, matrix is degenerate
 
-if (imax != currentRow) {
-        //pivoting P
-    array_copy(n, P[currentRow], ptr);
-    array_copy(n, P[imax], P[currentRow]);
-    array_copy(n, ptr, P[imax]);
+    if (imax != lastPivotLine-1) {
+            //pivoting P
+        array_copy(n, P[lastPivotLine], ptr);
+        array_copy(n, P[imax], P[lastPivotLine]);
+        array_copy(n, ptr, P[imax]);
 
-        //pivoting rows of A
-    array_copy(n, A[currentRow], ptr);
-    array_copy(n, A[imax], A[currentRow]);
-    array_copy(n, ptr, A[imax]);
+            //pivoting rows of A
+        array_copy(n, A[lastPivotLine], ptr);
+        array_copy(n, A[imax], A[lastPivotLine]);
+        array_copy(n, ptr, A[imax]);
 
-        //counting pivots starting from N (for determinant)
-    hasPivoted=1;
-}
+            //counting pivots starting from N (for determinant)
+        hasPivoted=1;
+    }
 
     /*for (j = currentRow + 1; j < N; j++) {
         A[j][currentRow] /= A[currentRow][currentRow];
@@ -553,8 +589,11 @@ char * buildFileName(enum OUTPUT_MATRIX OM, size_t n, short int index, enum PIVO
     strcat(res, "_");
 
     switch(strategy) {
-        case PS_MAX:
-            strcat(res, "MAX");
+        case PS_MAX_MAG_NOT_IN_S:
+            strcat(res, "MAX_MAG_NOT_IN_S");
+            break;
+        case PS_MAX_MAG_IN_S:
+            strcat(res, "MAX_MAG_IN_S");
             break;
         case PS_MAX_PRECISION:
             strcat(res, "MAX_PREC");
@@ -584,12 +623,13 @@ char * buildFileName(enum OUTPUT_MATRIX OM, size_t n, short int index, enum PIVO
      |   Fin Si
      Fin Pour
   Fin Gauss-Jordan */
-void gaussJordanPivot(const size_t n, const size_t m, double A[n][m], const short int isFpanr, const enum PIVOT_STRATEGY strategy) {
+int gaussJordanPivot(const size_t n, const size_t m, double A[n][m], const short int isFpanr, const enum PIVOT_STRATEGY strategy) {
     #if DEBUG
     printf("\ngaussJordanPivot\n");
     fflush(stdout);
     #endif
     int r = 0;
+    double val;
     // size_t k;
     double max/*, ptr[m]*/;
     size_t maxI, maxJ;
@@ -609,13 +649,14 @@ void gaussJordanPivot(const size_t n, const size_t m, double A[n][m], const shor
         }
         printf("\nafter hung \n");
         // scanf("%d",&maxPrec);
-        printf("\nPSMAX?%d",strategy==PS_MAX);
+        printf("\nPSMAXNOTINS?%d",strategy==PS_MAX_MAG_NOT_IN_S);
+        printf("\nPSMAXINS?%d",strategy==PS_MAX_MAG_IN_S);
         printf("\nPSMAXPREC?%d",strategy==PS_MAX_PRECISION);
         fflush(stdout);
         #endif
         // we got S
         switch ( strategy ) {
-            case PS_MAX:
+            case PS_MAX_MAG_NOT_IN_S:
                 // selecting the pivot of maximum magnitude (not in S)
                 max = FPANR_ZERO;
                 for ( size_t i = r ; i < n ; ++i ) {
@@ -629,6 +670,18 @@ void gaussJordanPivot(const size_t n, const size_t m, double A[n][m], const shor
                 }
                 // manualPivoting(n, m, A, max, maxI, maxJ, r);
                 // r = maxI;
+                break;
+            case PS_MAX_MAG_IN_S:
+                // selecting the pivot of maximum magnitude (in S)
+                max = FPANR_ZERO;
+                for(size_t i = 0 ; i < n ; ++i ) {
+                    val = A[independantSet[i][0]][independantSet[i][1]];
+                    if ( val > max && independantSet[i][0] >= r && independantSet[i][1] == j) {
+                        max = val;
+                        maxI = independantSet[i][0];
+                        maxJ = independantSet[i][1];
+                    }
+                }
                 break;
             case PS_MAX_PRECISION:
                 assert(isFpanr /*Error : should use FPANR when computing max precision pivot strategy*/);
@@ -698,6 +751,7 @@ void gaussJordanPivot(const size_t n, const size_t m, double A[n][m], const shor
             }*/
         }
     }
+    return r;
 }
 
 void manualPivoting(const size_t n, const size_t m, double A[n][m], const double pivotValue, const size_t currentLine, const size_t currentColumn, const size_t lastPivotLine) {
@@ -767,7 +821,10 @@ void gaussJordanInversion(const size_t n, const size_t m, const double A[n][m], 
             }
         }
     }
-    gaussJordanPivot(n, height, *B, isFpanr, strategy);
+    int r = gaussJordanPivot(n, height, *B, isFpanr, strategy);
+    if ( r == 0 ) {
+        fprintf(stderr, "\n***********\nDidn't pivot at all....\n***********\n");
+    }
     #if DEBUG
     matrix_print_fpanr(n,height,*B);
     fflush(stdout);

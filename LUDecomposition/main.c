@@ -33,6 +33,15 @@ VERIFICARLO_BACKEND=FPANR verificarlo LUFacto.c main.c utils.c hungarian.c -lm -
 VERIFICARLO_BACKEND=FPANR verificarlo main.c utils.c hungarian.c LUFacto.c -lm -lfpanrio
 VERIFICARLO_BACKEND=FPANR ./a.out 3 1 hungarian
 
+// normal build with the 2nd 3x3 matrix, hungarian and FPANR
+rm *.ll *.o a.out
+VERIFICARLO_BACKEND=FPANR verificarlo utils.c hungarian.c LUFacto.c main.c -lm -lfpanrio
+VERIFICARLO_BACKEND=FPANR verificarlo hungarian.c LUFacto.c main.c utils.c -lm -lfpanrio
+VERIFICARLO_BACKEND=FPANR verificarlo LUFacto.c main.c utils.c hungarian.c -lm -lfpanrio
+VERIFICARLO_BACKEND=FPANR verificarlo main.c utils.c hungarian.c LUFacto.c -lm -lfpanrio
+VERIFICARLO_BACKEND=FPANR ./a.out 3 1 hungarian 1
+
+
 // valgrind exec with 3x3 matrix, hungarian and FPANR
 rm *.ll *.o a.out
 VERIFICARLO_BACKEND=FPANR verificarlo utils.c hungarian.c LUFacto.c main.c -lm -lfpanrio
@@ -68,6 +77,7 @@ int main(int argc, char *argv[]) {
     return 0;*/
     const short int NB_MATRIX = 8;
     enum INVERSION_ALGORITHM algorithm = IA_LU;
+    enum INPUT_MATRIX matrix;
 
     size_t n = DEFAULT_MATRIX_SIZE;
     short int isFpanr = 0;
@@ -91,6 +101,17 @@ int main(int argc, char *argv[]) {
                     // hungarian
                     algorithm = IA_HUNG;
                 }
+                if ( argc >= 5 ) {
+                    if(strcmp(argv[4], "1") == 0 ) {
+                        matrix = MAT_2;
+                    } else if (strcmp(argv[4], "0") == 0 ) {
+                        matrix = MAT_1;
+                    }
+                } else if ( n == 3 ) {
+                    matrix = MAT_1;
+                } else {
+                    matrix = MAT_HILBERT;
+                }
             }
         }
     }
@@ -100,14 +121,14 @@ int main(int argc, char *argv[]) {
     //scanf("%zu",&n);
 
     // iterating through enum strategies
-    for (int strategy = PS_MAX ; strategy <= PS_MAX_PRECISION ; ++strategy ) {
+    for (int strategy = PS_MAX_MAG_NOT_IN_S; strategy <= PS_MAX_PRECISION ; ++strategy ) {
         if ( strategy != PS_MAX_PRECISION || isFpanr ) {
             // 8 matrix need to be computed with perturbations
             for ( short int i = 0 ; i < NB_MATRIX ; ++i ) {
-                computeMatrix(n, isFpanr, i, strategy, algorithm);
+                computeMatrix(n, isFpanr, i, strategy, algorithm, matrix);
             }
             // 1 "clear" is computed as reference
-            computeMatrix(n, isFpanr, -1, strategy, algorithm);
+            computeMatrix(n, isFpanr, -1, strategy, algorithm, matrix);
         }
     }
 
@@ -120,7 +141,7 @@ int main(int argc, char *argv[]) {
 
     if ( isFpanr ) {
         // looping through strategies looks like a good place to start
-        for ( int strategy = PS_MAX ; strategy <= PS_MAX_PRECISION ; ++strategy ) {
+        for ( int strategy = PS_MAX_MAG_NOT_IN_S; strategy <= PS_MAX_PRECISION ; ++strategy ) {
             // ok now we have to sum up the 8 matrices that have been computed
             mineStrategy(n, strategy, NB_MATRIX, isFpanr, algorithm);
         }
@@ -133,6 +154,7 @@ int main(int argc, char *argv[]) {
 }
 
 #define MAX_PREC 51
+#define USE_DIFF 1
 void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int nb_matrix, const int isFpanr, const enum INVERSION_ALGORITHM algorithm) {
     char fileName[100];
     char * tmp;
@@ -168,10 +190,17 @@ void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int 
 
         for ( size_t i = 0 ; i < n ; ++i ) {
             for ( size_t j = 0 ; j < n ; ++j ) {
-                val =  matrixRef[i][j] - perturbedMatrix[i][j];
-               // printf("\n[%zu][%zu] : ref:%d,pert:%d,dif:%d",i,j,getPrecFromFpanrDouble(matrixRef[i][j]),getPrecFromFpanrDouble(perturbedMatrix[i][j]),getPrecFromFpanrDouble(val));
-               // printf("\n\t%.16e - %.16e = %.16e",fpanrToDouble(matrixRef[i][j]),fpanrToDouble(perturbedMatrix[i][j]),fpanrToDouble(matrixRef[i][j]-perturbedMatrix[i][j]));
-                absA = isFpanr?myAbs(val):fabs(val);
+                if ( USE_DIFF ) {
+                    val =  matrixRef[i][j] - perturbedMatrix[i][j];
+                   // printf("\n[%zu][%zu] : ref:%d,pert:%d,dif:%d",i,j,getPrecFromFpanrDouble(matrixRef[i][j]),getPrecFromFpanrDouble(perturbedMatrix[i][j]),getPrecFromFpanrDouble(val));
+                   // printf("\n\t%.16e - %.16e = %.16e",fpanrToDouble(matrixRef[i][j]),fpanrToDouble(perturbedMatrix[i][j]),fpanrToDouble(matrixRef[i][j]-perturbedMatrix[i][j]));
+                    absA = isFpanr?myAbs(val):fabs(val);
+                } else {
+                    printf("\n\t--loss prec ref %d: \tloss prec perturbed : %d",MAX_PREC-getPrecFromFpanrDouble(matrixRef[i][j]),40-getPrecFromFpanrDouble(perturbedMatrix[i][j]));
+                    val = matrixRef[i][j];
+                    absA = myAbs(val);
+                }
+
                // printf(" (after abs %d)",getPrecFromFpanrDouble(absA));
                 prec = MAX_PREC-getPrecFromFpanrDouble(absA);
                 assert(prec<=MAX_PREC && prec >= 0);

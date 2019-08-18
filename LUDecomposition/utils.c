@@ -189,6 +189,20 @@ void fill_fig1(double matrix[3][3]) {
 	matrix[2][1] = 0.1;
 	matrix[2][2] = 0.55;
 }
+
+
+void fill_fig2(double matrix[3][3]) {
+	matrix[0][0] = 25.0;
+	matrix[0][1] = 3.3;
+	matrix[0][2] = 2.0;
+	matrix[1][0] = 6.0;
+	matrix[1][1] = 1.6;
+	matrix[1][2] = 3.86;
+	matrix[2][0] = 0.82;
+	matrix[2][1] = 4.0;
+	matrix[2][2] = 9.6;
+}
+
 /**
  * Multiply the matrix A with B and put the result in result.
  * @param n number of lines of A
@@ -375,17 +389,32 @@ for(size_t i=0; i<x; ++i)
 */
 
 void fill_fig1_fpanr(double matrix[3][3]) {
-	int ref = 43;
-	matrix[0][0] = doubleToFpanrWithPrec(3000,ref-15);
-	matrix[0][1] = doubleToFpanrWithPrec(1200,ref-3);
-	matrix[0][2] = doubleToFpanrWithPrec(330,ref-6);
-	matrix[1][0] = doubleToFpanrWithPrec(100,ref-3);
-	matrix[1][1] = doubleToFpanrWithPrec(9,ref-3);
-	matrix[1][2] = doubleToFpanrWithPrec(900,ref-3);
-	matrix[2][0] = doubleToFpanrWithPrec(1500,ref-2);
+	int ref = 51;
+	matrix[0][0] = doubleToFpanrWithPrec(3000.0,ref-15);
+	matrix[0][1] = doubleToFpanrWithPrec(1200.0,ref-3);
+	matrix[0][2] = doubleToFpanrWithPrec(330.0,ref-6);
+	matrix[1][0] = doubleToFpanrWithPrec(100.0,ref-3);
+	matrix[1][1] = doubleToFpanrWithPrec(9.0,ref-3);
+	matrix[1][2] = doubleToFpanrWithPrec(900.0,ref-3);
+	matrix[2][0] = doubleToFpanrWithPrec(1500.0,ref-2);
 	matrix[2][1] = doubleToFpanrWithPrec(0.1,ref-4);
 	matrix[2][2] = doubleToFpanrWithPrec(0.55,ref-5);
 }
+
+
+void fill_fig2_fpanr(double matrix[3][3]) {
+	int ref = 51;
+	matrix[0][0] = doubleToFpanrWithPrec(25.0,ref-15);
+	matrix[0][1] = doubleToFpanrWithPrec(3.3,ref-3);
+	matrix[0][2] = doubleToFpanrWithPrec(2.0,ref-5);
+	matrix[1][0] = doubleToFpanrWithPrec(6.0,ref-4);
+	matrix[1][1] = doubleToFpanrWithPrec(1.6,ref-4);
+	matrix[1][2] = doubleToFpanrWithPrec(3.86,ref-5);
+	matrix[2][0] = doubleToFpanrWithPrec(0.82,ref-4);
+	matrix[2][1] = doubleToFpanrWithPrec(4.0,ref-4);
+	matrix[2][2] = doubleToFpanrWithPrec(9.6,ref-3);
+}
+
 
 /**
  * Multiply the matrix A with B and put the result in result fpanrway.
