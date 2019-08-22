@@ -19,7 +19,7 @@
 #define TRUE 1
 #define FALSE 0
 
-//#define DEBUG
+#define DEBUG
 
 enum HUNG_STEPS{HS_PRELIMINARIES, HS_ONE, HS_TWO, HS_THREE, HS_END};
 
@@ -46,7 +46,7 @@ enum HUNG_STEPS{HS_PRELIMINARIES, HS_ONE, HS_TWO, HS_THREE, HS_END};
 int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t independantSet[MIN(n,m)][2], short int isFpanr) {
   double matrix[n][m];
   for (size_t i = 0 ; i < n ; ++i ) {
-    for ( size_t j = 0 ; j < n ; ++j ) {
+    for ( size_t j = 0 ; j < m ; ++j ) {
       matrix[i][j]=inputMat[i][j];
     }
   }
@@ -90,7 +90,7 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
           }
         }
         for ( j = 0 ; j < m ; ++j ) {
-          matrix[i][j] -= minH;
+          matrix[i][j] = matrix[i][j] - minH;
         }
       } // do the same for each row of A
 
@@ -109,7 +109,7 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
           }
         }
         for ( i = 0 ; i < n ; ++i ) {
-          matrix[i][j] -= minH;
+          matrix[i][j] = matrix[i][j] - minH;
         }
       } // do the same for each column of A
       #ifdef DEBUG
@@ -139,6 +139,7 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
         fflush(stdout);
       #endif
       isCovered = TRUE;
+      cpt = 0;
       // then cover every column containing a starred zero
       for ( j = 0 ; j < m ; ++j ) {
         isStarred = columnContainsTrue(n,m,j,starred);
@@ -146,6 +147,7 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
         printf("\nisCovered=%hd",isCovered);
         // scanf("%hd",&bStep1);
         #endif
+        cpt = cpt + 1;
         isCovered = isCovered && isStarred;
         if (isStarred) {
           coveredColumns[j] = TRUE;
@@ -155,7 +157,7 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
         printf("before while step1\n");
         fflush(stdout);
       #endif
-      if ( isCovered ) 
+      if ( isCovered || cpt == MIN(n,m)) 
         state = HS_END;
       else
         state = HS_ONE;
