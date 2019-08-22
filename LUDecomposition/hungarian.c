@@ -45,7 +45,12 @@ enum HUNG_STEPS{HS_PRELIMINARIES, HS_ONE, HS_TWO, HS_THREE, HS_END};
 
 int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t independantSet[MIN(n,m)][2], short int isFpanr) {
   double matrix[n][m];
-  memcpy(matrix, inputMat, sizeof(double)*(n*m));
+  for (size_t i = 0 ; i < n ; ++i ) {
+    for ( size_t j = 0 ; j < n ; ++j ) {
+      matrix[i][j]=inputMat[i][j];
+    }
+  }
+  // memcpy(matrix, inputMat, sizeof(double[n][m]));
   double minH;
   short int starred[n][m], coveredRows[n], coveredColumns[m], primed[n][m];
   short int isStarred = FALSE, isFound = FALSE, isCovered = FALSE, isMin = FALSE;
