@@ -33,13 +33,13 @@ VERIFICARLO_BACKEND=FPANR verificarlo LUFacto.c main.c utils.c hungarian.c -lm -
 VERIFICARLO_BACKEND=FPANR verificarlo main.c utils.c hungarian.c LUFacto.c -lm -lfpanrio
 VERIFICARLO_BACKEND=FPANR ./a.out 3 1 hungarian
 
-// normal build with the 2nd 3x3 matrix, hungarian and FPANR
+// normal build with the 2nd 3x3 matrix, hungarian and FPANR -------------
 rm *.ll *.o a.out
 VERIFICARLO_BACKEND=FPANR verificarlo utils.c hungarian.c LUFacto.c main.c -lm -lfpanrio
 VERIFICARLO_BACKEND=FPANR verificarlo hungarian.c LUFacto.c main.c utils.c -lm -lfpanrio
 VERIFICARLO_BACKEND=FPANR verificarlo LUFacto.c main.c utils.c hungarian.c -lm -lfpanrio
 VERIFICARLO_BACKEND=FPANR verificarlo main.c utils.c hungarian.c LUFacto.c -lm -lfpanrio
-VERIFICARLO_BACKEND=FPANR ./a.out 3 1 hungarian 1
+VERIFICARLO_BACKEND=FPANR ./a.out 3 1 hungarian 1 1
 
 
 // valgrind exec with 3x3 matrix, hungarian and FPANR
@@ -78,6 +78,7 @@ int main(int argc, char *argv[]) {
     const short int NB_MATRIX = 8;
     enum INVERSION_ALGORITHM algorithm = IA_LU;
     enum INPUT_MATRIX matrix;
+    enum INDICATEUR_ENUM indicateur;
 
     size_t n = DEFAULT_MATRIX_SIZE;
     short int isFpanr = 0;
@@ -107,6 +108,14 @@ int main(int argc, char *argv[]) {
                     } else if (strcmp(argv[4], "0") == 0 ) {
                         matrix = MAT_1;
                     }
+                    if ( argc >= 6 ) {
+                        // indicateur
+                        if(strcmp(argv[5], "1") == 0 ) {
+                            indicateur = IE_LOW_PREC;
+                        } else {
+                            indicateur = IE_PERTURBED;
+                        }
+                    }
                 } else if ( n == 3 ) {
                     matrix = MAT_1;
                 } else {
@@ -123,12 +132,18 @@ int main(int argc, char *argv[]) {
     // iterating through enum strategies
     for (int strategy = PS_MAX_MAG_NOT_IN_S; strategy <= PS_MAX_PRECISION ; ++strategy ) {
         if ( strategy != PS_MAX_PRECISION || isFpanr ) {
-            // 8 matrix need to be computed with perturbations
-            for ( short int i = 0 ; i < NB_MATRIX ; ++i ) {
-                computeMatrix(n, isFpanr, i, strategy, algorithm, matrix);
+            if (indicateur == IE_PERTURBED) {
+                // 8 matrix need to be computed with perturbations
+                for ( short int i = 0 ; i < NB_MATRIX ; ++i ) {
+                    computeMatrix(n, isFpanr, i, strategy, algorithm, matrix,indicateur,PREC_MAX_DOUBLE);
+                }
+            } else if (indicateur == IE_LOW_PREC) {
+                printf("\nMATRIX LOW PREC");
+                computeMatrix(n, isFpanr, -2, strategy, algorithm, matrix,indicateur,DEFAULT_LOW_PRECISION);
             }
+                printf("\nMATRIX REF");
             // 1 "clear" is computed as reference
-            computeMatrix(n, isFpanr, -1, strategy, algorithm, matrix);
+            computeMatrix(n, isFpanr, -1, strategy, algorithm, matrix, indicateur,PREC_MAX_DOUBLE);
         }
     }
 
@@ -143,7 +158,7 @@ int main(int argc, char *argv[]) {
         // looping through strategies looks like a good place to start
         for ( int strategy = PS_MAX_MAG_NOT_IN_S; strategy <= PS_MAX_PRECISION ; ++strategy ) {
             // ok now we have to sum up the 8 matrices that have been computed
-            mineStrategy(n, strategy, NB_MATRIX, isFpanr, algorithm);
+            mineStrategy(n, strategy, indicateur==IE_PERTURBED?NB_MATRIX:1, isFpanr, algorithm);
         }
     }
 
@@ -160,6 +175,7 @@ void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int 
     char * tmp;
     int prec;
     double val, absA;
+    double moydist=FPANR_ZERO;
     double matrixRef[n][n], perturbedMatrix[n][n]; // it will be used for comparison THROUGHOUT the rest of this function
     printf("\nmineprec\n");
     // on commence par déclarer le tableau qui contiendra les précisions
@@ -182,60 +198,77 @@ void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int 
     fpanrFileToDMat(n, n, matrixRef, fileName);
     //getMatrixFromFile(n,matrixRef,fileName);
     for ( size_t indMat = 0 ; indMat < nb_matrix ; ++indMat ) {
-        tmp = buildFileName(OM_A_INV, n, indMat, strategy, algorithm);
+        tmp = buildFileName(OM_A_INV, n, nb_matrix==1?-2:indMat, strategy, algorithm);
         assert(tmp != NULL);
         strcpy(fileName, tmp);
         strcat(fileName,".fpanr");
         fpanrFileToDMat(n, n, perturbedMatrix, fileName);
+        printf("filename : %s",fileName);
 
         for ( size_t i = 0 ; i < n ; ++i ) {
             for ( size_t j = 0 ; j < n ; ++j ) {
-                if ( USE_DIFF ) {
-                    val =  matrixRef[i][j] - perturbedMatrix[i][j];
-                   // printf("\n[%zu][%zu] : ref:%d,pert:%d,dif:%d",i,j,getPrecFromFpanrDouble(matrixRef[i][j]),getPrecFromFpanrDouble(perturbedMatrix[i][j]),getPrecFromFpanrDouble(val));
-                   // printf("\n\t%.16e - %.16e = %.16e",fpanrToDouble(matrixRef[i][j]),fpanrToDouble(perturbedMatrix[i][j]),fpanrToDouble(matrixRef[i][j]-perturbedMatrix[i][j]));
-                    absA = isFpanr?myAbs(val):fabs(val);
+                if(nb_matrix == 1) {
+                    if ( cmpFpanrDouble(matrixRef[i][j], dtfp(0.0)) != 0 ) {
+                        // printf("\np:(%F-%F)/%F=%F",matrixRef[i][j],perturbedMatrix[i][j],matrixRef[i][j],myAbs((matrixRef[i][j] - perturbedMatrix[i][j])/matrixRef[i][j]));
+                        moydist += myAbs((matrixRef[i][j] - perturbedMatrix[i][j])/matrixRef[i][j]);
+                    } else {
+                        moydist += myAbs(matrixRef[i][j] - perturbedMatrix[i][j]);
+                    }
                 } else {
-                    printf("\n\t--loss prec ref %d: \tloss prec perturbed : %d",MAX_PREC-getPrecFromFpanrDouble(matrixRef[i][j]),40-getPrecFromFpanrDouble(perturbedMatrix[i][j]));
-                    val = matrixRef[i][j];
-                    absA = myAbs(val);
-                }
+                    if ( USE_DIFF ) {
+                        val =  matrixRef[i][j] - perturbedMatrix[i][j];
+                       // printf("\n[%zu][%zu] : ref:%d,pert:%d,dif:%d",i,j,getPrecFromFpanrDouble(matrixRef[i][j]),getPrecFromFpanrDouble(perturbedMatrix[i][j]),getPrecFromFpanrDouble(val));
+                       // printf("\n\t%.16e - %.16e = %.16e",fpanrToDouble(matrixRef[i][j]),fpanrToDouble(perturbedMatrix[i][j]),fpanrToDouble(matrixRef[i][j]-perturbedMatrix[i][j]));
+                        absA = isFpanr?myAbs(val):fabs(val);
+                    } else {
+                        printf("\n\t--loss prec ref %d: \tloss prec perturbed : %d",MAX_PREC-getPrecFromFpanrDouble(matrixRef[i][j]),40-getPrecFromFpanrDouble(perturbedMatrix[i][j]));
+                        val = matrixRef[i][j];
+                        absA = myAbs(val);
+                    }
 
-               // printf(" (after abs %d)",getPrecFromFpanrDouble(absA));
-                prec = MAX_PREC-getPrecFromFpanrDouble(absA);
-                assert(prec<=MAX_PREC && prec >= 0);
-                //prec = getPrecFromFpanrDouble(absA);
-                arrayPrec[prec] = arrayPrec[prec] + 1;
+                   // printf(" (after abs %d)",getPrecFromFpanrDouble(absA));
+                    prec = MAX_PREC-getPrecFromFpanrDouble(absA);
+                    assert(prec<=MAX_PREC && prec >= 0);
+                    //prec = getPrecFromFpanrDouble(absA);
+                    arrayPrec[prec] = arrayPrec[prec] + 1;
+                }
             }
         }
         free(tmp);
     }
-    
-    for ( size_t k = 0 ; k < MAX_PREC ; ++k ) {
-        printf("\n[%zu]:%d\t",k,arrayPrec[k]);
-        for ( int m = 0 ; m < arrayPrec[k] ; ++m) {
-            printf(" ||");
-        }
-    }
-    printf("\n\n");
-
-
-    FILE * fp;
-    tmp = buildFileName(OM_PREC, n, -1, strategy, algorithm);
-    assert(tmp != NULL);
-    strcpy(fileName, tmp);
-    fp = fopen(fileName, "w");
-    if ( fp == NULL ) {
-        fprintf(stderr, "\nError while opening file %s. Exiting...\n",fileName);
+    if(nb_matrix == 1) {
+        moydist /= (n*n);
+        char * chaine = fpanrDoubleToStr(moydist);
+        assert(chaine != NULL);
+        printf("\nMEAN DISTANCE : %s",chaine);
+        free(chaine);
     } else {
-        printf("\nWriting final strategy mining file to '%s'",fileName);
         for ( size_t k = 0 ; k < MAX_PREC ; ++k ) {
-            fprintf(fp, "%zu\t%d\n",k,arrayPrec[k]);
+            printf("\n[%zu]:%d\t",k,arrayPrec[k]);
+            for ( int m = 0 ; m < arrayPrec[k] ; ++m) {
+                printf(" ||");
+            }
         }
-        fclose(fp);
+        printf("\n\n");
+
+        FILE * fp;
+        tmp = buildFileName(OM_PREC, n, -1, strategy, algorithm);
+        assert(tmp != NULL);
+        strcpy(fileName, tmp);
+        fp = fopen(fileName, "w");
+        if ( fp == NULL ) {
+            fprintf(stderr, "\nError while opening file %s. Exiting...\n",fileName);
+        } else {
+            printf("\nWriting final strategy mining file to '%s'",fileName);
+            for ( size_t k = 0 ; k < MAX_PREC ; ++k ) {
+                fprintf(fp, "%zu\t%d\n",k,arrayPrec[k]);
+            }
+            fclose(fp);
+        }
+
+        free(tmp);
     }
 
-    free(tmp);
     free(arrayPrec);
 
     //printf("mining %d %d %d",strategy, nb_matrix, isFpanr);

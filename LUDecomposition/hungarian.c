@@ -15,11 +15,12 @@
 // #define FPANR_ZERO 0.0
 // #define FPANR_ONE 1.0
 #define TO_FP(v) isFpanr?fptd(v):v
+#define dtfpwp(v,p) doubleToFpanrWithPrec(v,p)
 
 #define TRUE 1
 #define FALSE 0
 
-#define DEBUG
+// #define DEBUG
 
 enum HUNG_STEPS{HS_PRELIMINARIES, HS_ONE, HS_TWO, HS_THREE, HS_END};
 
@@ -43,7 +44,7 @@ enum HUNG_STEPS{HS_PRELIMINARIES, HS_ONE, HS_TWO, HS_THREE, HS_END};
   }
 }*/
 
-int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t independantSet[MIN(n,m)][2], short int isFpanr) {
+int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t independantSet[MIN(n,m)][2], short int isFpanr, const enum INDICATEUR_ENUM indicateur, const int precision) {
   double matrix[n][m];
   for (size_t i = 0 ; i < n ; ++i ) {
     for ( size_t j = 0 ; j < m ; ++j ) {
@@ -63,12 +64,6 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
   size_t cpt;
   int bla;
   size_t index;
-
-  #ifdef DEBUG
-    printf("stepA\n");
-    //scanf("%c",&bStep1);
-    fflush(stdout);
-  #endif
 
   while(!shouldExit) {
     switch(state) {
@@ -94,10 +89,6 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
         }
       } // do the same for each row of A
 
-      #ifdef DEBUG
-        printf("stepB\n");
-        fflush(stdout);
-      #endif
 
       // consider a column of the matrix A 
       for ( j = 0 ; j < m ; ++j ) {
@@ -112,14 +103,10 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
           matrix[i][j] = matrix[i][j] - minH;
         }
       } // do the same for each column of A
-      #ifdef DEBUG
-        printf("stepC\n");
-        fflush(stdout);
-      #endif
       for ( i = 0 ; i < n ; ++i ) {
         for ( j = 0 ; j < m ; ++j ) {
           // consider a zero Z of the matrix
-          if (cmpFpanrDouble(matrix[i][j],FPANR_ZERO) == 0 ) {
+          if (cmpFpanrDouble(matrix[i][j],CPREC(0.0)) == 0 ) {
             // if there is no starred zero in its row
             isStarred = rowContainsTrue(n,m,i,starred);
             // and none in its column
@@ -133,7 +120,6 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
         }
       }
       #ifdef DEBUG
-        printf("stepD\n");
         cusPrintM(n,m,starred);
         cusPrintM(n,m,primed);
         fflush(stdout);
@@ -191,9 +177,8 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
             // free(chaine);
             // choose a non-covered zero
           //  if (TO_FP(matrix[i][j]) == FPANR_ZERO && coveredRows[i] == FALSE && coveredColumns[j] == FALSE) {
-            if (cmpFpanrDouble(matrix[i][j], FPANR_ZERO) == 0 && coveredRows[i] == FALSE && coveredColumns[j] == FALSE) {
+            if (cmpFpanrDouble(matrix[i][j], CPREC(0.0)) == 0 && coveredRows[i] == FALSE && coveredColumns[j] == FALSE) {
             #ifdef DEBUG
-              printf("\nWAZAAAAAAAAa:%zu %zu",i,j);
               cusPrintA(n,coveredRows);
               cusPrintA(m,coveredColumns);
               cusPrintM(n,m,starred);
@@ -226,7 +211,7 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
           isCovered = TRUE;
           for ( i = 0 ; i < n && isCovered ; ++i ) {
             for (j = 0 ; j < m && isCovered ; ++j ) {
-              if ( cmpFpanrDouble(matrix[i][j], FPANR_ZERO) == 0 && coveredRows[i] == FALSE && coveredColumns[j] == FALSE) {
+              if ( cmpFpanrDouble(matrix[i][j], CPREC(0.0)) == 0 && coveredRows[i] == FALSE && coveredColumns[j] == FALSE) {
                 isCovered = FALSE;
               }
             }
@@ -348,7 +333,7 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
         fflush(stdout);
         for ( i = 0 ; i < n ; ++i ) {
           for( j = 0 ; j < m ; ++j ) {
-            assert(cmpFpanrDouble(matrix[i][j], FPANR_ZERO) != 0 || (coveredRows[i] || coveredColumns[j]) 
+            assert(cmpFpanrDouble(matrix[i][j], CPREC(0.0)) != 0 || (coveredRows[i] || coveredColumns[j]) 
             /* "At this point, all the zeros of the matrix are covered"*/);
           }
         }

@@ -4,10 +4,12 @@
 
 #define dtfp(v) doubleToFpanr(v)
 #define fptd(v) fpanrToDouble(v)
+#define dtfpwp(v,p) doubleToFpanrWithPrec(v,p)
 
 #define DEFAULT_RANDOM_RANGE 2
 
 double myAbs(const double a);
+double myLog(const double a);
 
 // ---------------------------------------------------------------------------------------
 // ARRAYS
@@ -37,12 +39,15 @@ void perturbateMatrix(const size_t n, const size_t m, double A[n][n], const int 
 // FPANR
 
 void array_fill_fpanr (const size_t x, double array[x]);
+void array_fill_fpanr_with_prec (const size_t x, double array[x], const int precision);
 void arrayFillExp_fpanr(const size_t x, double array[x]) ;
 int getOneFpanr(const size_t n, const double array[n]);
 void array_print_fpanr (const size_t x, const double array[x]);
 void matrixFillId_fpanr(const size_t n, double array[n][n]);
 void matrix_fill_fpanr (const size_t x, const size_t y, double matrix[x][y]);
+void matrix_fill_fpanr_with_prec (const size_t x, const size_t y, double matrix[x][y], const int precision);
 void permutation_matrix_fill_fpanr (const size_t x, const size_t y, double matrix[x][y]);
+void permutation_matrix_fill_fpanr_with_prec (const size_t x, const size_t y, double matrix[x][y], const int precision);
 void hilbert_fpanr(const size_t x, const size_t y, double matrix[x][y]) ;
 void fill_fig1_fpanr(double matrix[3][3]);
 void fill_fig2_fpanr(double matrix[3][3]);

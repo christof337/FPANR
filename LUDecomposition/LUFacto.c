@@ -17,19 +17,16 @@
 // #define WRITE_Y_IN_FILE
 #define WRITE_A_INV_IN_FILE
 
-#define DEBUG 1
+#define DEBUG 0
 
 #define VERBOSE 1
-
-#define FPANR_ZERO isFpanr?dtfp(0.0):0.0
-#define FPANR_ONE isFpanr?dtfp(1.0):1.0
 
 #define DEFAULT_PERTURBATION 40
 
 extern enum PIVOT_STRATEGY strategy;
 extern enum OUTPUT_MATRIX OM;
 
-int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRATEGY strategy, enum INVERSION_ALGORITHM algorithm, enum INPUT_MATRIX matrix ) {
+int computeMatrix(const size_t n, const short int isFpanr, const short int index, const enum PIVOT_STRATEGY strategy, const enum INVERSION_ALGORITHM algorithm, const enum INPUT_MATRIX matrix, const enum INDICATEUR_ENUM indicateur, const int precision ) {
     // déclarations
     int bla;
     #if DEBUG
@@ -53,14 +50,25 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
 
     // initialisations
     if(isFpanr) {
-        matrix_fill_fpanr(n,n,*A);
-        matrix_fill_fpanr(n,n,*L);
-        matrix_fill_fpanr(n,n,*U);
-        permutation_matrix_fill_fpanr(n,n,*P);   // filling permutation matrix with zeros
-        array_fill(n,*B);
-        array_fill_fpanr(n, *X);
-        array_fill_fpanr(n, *Y);
-        matrix_fill_fpanr(n,n,*Ainv);
+        if(index != -2 ) {
+            matrix_fill_fpanr(n,n,*A);
+            matrix_fill_fpanr(n,n,*L);
+            matrix_fill_fpanr(n,n,*U);
+            permutation_matrix_fill_fpanr(n,n,*P);   // filling permutation matrix with zeros
+            array_fill_fpanr(n,*B);
+            array_fill_fpanr(n, *X);
+            array_fill_fpanr(n, *Y);
+            matrix_fill_fpanr(n,n,*Ainv);
+        } else {
+            matrix_fill_fpanr_with_prec(n,n,*A, DEFAULT_LOW_PRECISION);
+            matrix_fill_fpanr_with_prec(n,n,*L, DEFAULT_LOW_PRECISION);
+            matrix_fill_fpanr_with_prec(n,n,*U, DEFAULT_LOW_PRECISION);
+            permutation_matrix_fill_fpanr_with_prec(n,n,*P, DEFAULT_LOW_PRECISION);   // filling permutation matrix with zeros
+            array_fill_fpanr_with_prec(n,*B, DEFAULT_LOW_PRECISION);
+            array_fill_fpanr_with_prec(n, *X, DEFAULT_LOW_PRECISION);
+            array_fill_fpanr_with_prec(n, *Y, DEFAULT_LOW_PRECISION);
+            matrix_fill_fpanr_with_prec(n,n,*Ainv, DEFAULT_LOW_PRECISION);
+        }
     }else {
         matrix_fill(n,n,*A);
         matrix_fill(n,n,*L);
@@ -103,7 +111,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
         arrayFillExp(n,*B);
     }
 
-    if(index!=-1) {
+    if(index>-1) {
         // perturbation
         isFpanr?perturbateMatrix_fpanr(n,n,*A,DEFAULT_PERTURBATION):perturbateMatrix(n,n,*A, DEFAULT_PERTURBATION);
     }
@@ -138,7 +146,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
         case IA_LU:
             /*      LU decomposition call      */
             printf("\nLU decomposition :\n");
-            LU_decomposition(n, *U, *A, *L, isFpanr, *P, strategy);
+            LU_decomposition(n, *U, *A, *L, isFpanr, *P, strategy, indicateur, precision);
             break;
         case IA_HUNG:
             printf("\nGaussjordanpivot : ");
@@ -247,7 +255,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
     //#if VERBOSE
             // printf("\n\n[A_INV] with solve: \n");
             // matrix_print_fpanr(n, n, *Ainv);
-            LUPInvert(n, *U, *L, *P, *Ainv, isFpanr);
+            LUPInvert(n, *U, *L, *P, *Ainv, isFpanr, indicateur, precision);
             printf("\n\n[A_INV]: \n");
             matrix_print_fpanr(n, n, *Ainv);
     //#endif // VERBOSE
@@ -292,7 +300,7 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
     } else if (algorithm == IA_HUNG ) {
         printf("\neventually inverting the matrix : \n");
         fflush(stdout);
-        gaussJordanInversion(n, n, *A, *Ainv, isFpanr, strategy);
+        gaussJordanInversion(n, n, *A, *Ainv, isFpanr, strategy, indicateur, precision);
        // affichages finaux
         if(isFpanr) {
     #if VERBOSE
@@ -367,10 +375,10 @@ int computeMatrix(size_t n, short int isFpanr, short int index, enum PIVOT_STRAT
  * TODO : need to find the best pivoting strategy
  * returns the number of pivot made
 **/
-int LU_decomposition(const size_t n, double U[n][n], double A[n][n], double L[n][n], short int isFpanr, double P[n][n], enum PIVOT_STRATEGY strategy) {
+int LU_decomposition(const size_t n, double U[n][n], double A[n][n], double L[n][n], const short int isFpanr, double P[n][n], const enum PIVOT_STRATEGY strategy, const enum INDICATEUR_ENUM indicateur, const int precision) {
     int nbPivots = n;
     for(int j=0; j<n; ++j) {
-        nbPivots += LUPivot(n, A, P, j, nbPivots-n, isFpanr, strategy);
+        nbPivots += LUPivot(n, A, P, j, nbPivots-n, isFpanr, strategy, indicateur, precision);
         for(int i=0; i<n; ++i) {
             if(i<=j) {
                 U[i][j]=A[i][j];
@@ -378,16 +386,16 @@ int LU_decomposition(const size_t n, double U[n][n], double A[n][n], double L[n]
                     U[i][j]-=L[i][k]*U[k][j];
                 }
                 if(i==j)
-                    L[i][j]=FPANR_ONE;
+                    L[i][j]=CPREC(1.0);
                 else
-                    L[i][j]=FPANR_ZERO;
+                    L[i][j]=CPREC(0.0);
             } else {
                 L[i][j]=A[i][j];
                 for(int k=0; k<=j-1; ++k) {
                     L[i][j]-=L[i][k]*U[k][j];
                 }
                 L[i][j]/=U[j][j];
-                U[i][j]=FPANR_ZERO;
+                U[i][j]=CPREC(0.0);
             }
             // printf(" %d ", getPrecFromFpanrDouble(U[i][j]));
         }
@@ -403,18 +411,18 @@ int LU_decomposition(const size_t n, double U[n][n], double A[n][n], double L[n]
  *        containing column indexes where the permutation matrix has "1". The last element P[N]=S+N, 
  *        where S is the number of row exchanges needed for determinant computation, det(P)=(-1)^S    
  */
-int LUPivot(int n, double A[n][n], /*double tol,*/ double P[n][n], int currentColumn, int lastPivotLine, short int isFpanr, enum PIVOT_STRATEGY strategy) {
+int LUPivot(const int n, double A[n][n], /*double tol,*/ double P[n][n], const int currentColumn, const int lastPivotLine, const short int isFpanr, const enum PIVOT_STRATEGY strategy, const enum INDICATEUR_ENUM indicateur, const int precision) {
     int i, j, k, imax; 
     double maxA, ptr[n], absA;
     int hasPivoted = 0;
     int prec = 0, maxPrec = 0;
     size_t independantSet[n][2];
 
-    maxA = FPANR_ZERO;
+    maxA = CPREC(0.0);
     maxPrec = 0;
     imax = lastPivotLine-1;
 
-    hungarian(n,n,A, independantSet, isFpanr);
+    hungarian(n,n,A, independantSet, isFpanr, indicateur, precision);
 
     //for (k = currentRow; k < n; k++) {
     for ( i = 0 ; i < n ; ++i ) {
@@ -426,7 +434,7 @@ int LUPivot(int n, double A[n][n], /*double tol,*/ double P[n][n], int currentCo
                 // maximum magnitude strategy not in S
                 if (imax == lastPivotLine-1) {
                     for(i = lastPivotLine ; i < n ; ++i ) {
-                        absA = isFpanr?myAbs(A[i][currentColumn]):fabs(A[i][currentColumn]);
+                        absA = isFpanr?myLog(myAbs(A[i][currentColumn])):log(fabs(A[i][currentColumn]));
                         if ( absA > maxA && !isInZu(n,independantSet,i,currentColumn)) {
                             maxA = absA;
                             imax = i;
@@ -435,7 +443,7 @@ int LUPivot(int n, double A[n][n], /*double tol,*/ double P[n][n], int currentCo
                 }
                 break;
             case PS_MAX_MAG_IN_S:
-                absA = isFpanr?myAbs(A[k][j]):fabs(A[k][j]);
+                absA = isFpanr?myLog(myAbs(A[k][j])):log(fabs(A[k][j]));
                 if (absA > maxA && k >= lastPivotLine /*&& j == currentColumn*/) { 
                     maxA = absA;
                     imax = k;
@@ -490,7 +498,7 @@ int LUPivot(int n, double A[n][n], /*double tol,*/ double P[n][n], int currentCo
 /* INPUT: A,P filled in LUPDecompose; b - rhs vector; N - dimension
  * OUTPUT: x - solution vector of A*x=b
  */
-void LUPSolve(size_t n, double L[n][n], double U[n][n], double Y[n], double P[n][n], double B[n], double X[n], short int isFpanr) {
+void LUPSolve(const size_t n, double L[n][n], double U[n][n], double Y[n], double P[n][n], double B[n], double X[n], const short int isFpanr) {
     int i,j;
     for(i=0; i<n; ++i) {
         int permutedIndex = isFpanr?getOneFpanr(n,P[i]):getOne(n,P[i]);
@@ -511,14 +519,14 @@ void LUPSolve(size_t n, double L[n][n], double U[n][n], double Y[n], double P[n]
 /* INPUT: A,P filled in LUPDecompose; N - dimension
  * OUTPUT: IA is the inverse of the initial matrix
  */
-void LUPInvert(int n, double U[n][n], double L[n][n], double P[n][n], double IA[n][n], short int isFpanr) {
+void LUPInvert(const int n, double U[n][n], double L[n][n], double P[n][n], double IA[n][n], const short int isFpanr, const enum INDICATEUR_ENUM indicateur, const int precision) {
     for (int j = 0; j < n; j++) {
         for (int i = 0; i < n; i++) {
             int permut = isFpanr?getOneFpanr(n,P[i]):getOne(n,P[i]);
             if (permut == j) 
-                IA[i][j] = FPANR_ONE;
+                IA[i][j] = CPREC(1.0);
             else
-                IA[i][j] = FPANR_ZERO;
+                IA[i][j] = CPREC(0.0);
 
             for (int k = 0; k < i; k++)
                 IA[i][j] -= L[i][k] * IA[k][j];
@@ -581,7 +589,9 @@ char * buildFileName(enum OUTPUT_MATRIX OM, size_t n, short int index, enum PIVO
 
     if(index == -1) {
         sprintf(buffer, "ref");
-    } else {
+    } else if (index == -2) {
+        sprintf(buffer, "lp");
+    }else {
         sprintf(buffer, "%hi", index);
     }
     strcat(res, buffer);
@@ -628,7 +638,7 @@ char * buildFileName(enum OUTPUT_MATRIX OM, size_t n, short int index, enum PIVO
      |   Fin Si
      Fin Pour
   Fin Gauss-Jordan */
-int gaussJordanPivot(const size_t n, const size_t m, double A[n][m], const short int isFpanr, const enum PIVOT_STRATEGY strategy) {
+int gaussJordanPivot(const size_t n, const size_t m, double A[n][m], const short int isFpanr, const enum PIVOT_STRATEGY strategy, const enum INDICATEUR_ENUM indicateur, const int precision) {
     #if DEBUG
     printf("\ngaussJordanPivot\n");
     fflush(stdout);
@@ -647,7 +657,7 @@ int gaussJordanPivot(const size_t n, const size_t m, double A[n][m], const short
         fflush(stdout);
         // scanf("%d",&maxPrec);
         #endif
-        hungarian(n,m,A, independantSet, isFpanr);
+        hungarian(n,m,A, independantSet, isFpanr, indicateur, precision);
         #if DEBUG
         for(size_t i = 0 ; i < n ; ++i ) {
             printf("\n(%zu) : [%zu,%zu] = %f\n",i, independantSet[i][0],independantSet[i][1], A[independantSet[i][0]][independantSet[i][1]]);
@@ -664,7 +674,7 @@ int gaussJordanPivot(const size_t n, const size_t m, double A[n][m], const short
         switch ( strategy ) {
             case PS_MAX_MAG_NOT_IN_S:
                 // selecting the pivot of maximum magnitude (not in S)
-                max = FPANR_ZERO;
+                max = CPREC(0.0);
                 for ( size_t i = r ; i < n ; ++i ) {
                    // for ( size_t j = 0 ; j < m ; ++j ) {
                         if ( A[i][j] > max && !isInZu(n,independantSet,i,j)) {
@@ -679,7 +689,7 @@ int gaussJordanPivot(const size_t n, const size_t m, double A[n][m], const short
                 break;
             case PS_MAX_MAG_IN_S:
                 // selecting the pivot of maximum magnitude (in S)
-                max = FPANR_ZERO;
+                max = CPREC(0.0);
                 for(size_t i = 0 ; i < n ; ++i ) {
                     val = A[independantSet[i][0]][independantSet[i][1]];
                     if ( val > max && ((int)independantSet[i][0]) > r /*&& ((int)independantSet[i][1]) == j*/) {
@@ -691,7 +701,7 @@ int gaussJordanPivot(const size_t n, const size_t m, double A[n][m], const short
                 break;
             case PS_MAX_PRECISION:
                 assert(isFpanr /*Error : should use FPANR when computing max precision pivot strategy*/);
-                max = FPANR_ZERO;
+                max = CPREC(0.0);
                 maxPrec = 0;
                 maxI = n+1;
                 maxJ = m+1;
@@ -702,8 +712,7 @@ int gaussJordanPivot(const size_t n, const size_t m, double A[n][m], const short
                     printf("\nchecking (%zu,%zu) for [%zu] (lastPivotLine : %d) ; prec = %d\n, j=%d",independantSet[i][0],independantSet[i][1],i,r,prec,j);
                     fflush(stdout);
                     #endif
-                   if ( prec > maxPrec && ((int)independantSet[i][0]) > r  /*&& ((int)independantSet[i][1]) == j*/ && cmpFpanrDouble(val, FPANR_ZERO) != 0) {
-                        printf("\twiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii\n");
+                   if ( prec > maxPrec && ((int)independantSet[i][0]) > r  /*&& ((int)independantSet[i][1]) == j*/ && cmpFpanrDouble(val, CPREC(0.0)) != 0) {
                         maxPrec = prec;
                         maxI = independantSet[i][0];
                         maxJ = independantSet[i][1];
@@ -727,7 +736,7 @@ int gaussJordanPivot(const size_t n, const size_t m, double A[n][m], const short
         //     }
         // }
 
-        if ( isFpanr?(cmpFpanrDouble(max, FPANR_ZERO) != 0):(max!=FPANR_ZERO)) {
+        if ( isFpanr?(cmpFpanrDouble(max, CPREC(0.0)) != 0):(max!=CPREC(0.0))) {
             #if DEBUG
             printf("\nbefore manual Pivoting \n");
             matrix_print_fpanr(n,m,A);
@@ -800,9 +809,13 @@ void manualPivoting(const size_t n, const size_t m, double A[n][m], const double
         if ( i != lastPivotLine ) {
             // Soustraire à la ligne i la ligne r multipliée par A[i,j] (de façon à annuler A[i,j])
             for ( size_t l = 0 ; l < m ; ++l ) {
+                #if DEBUG
                 printf("\ni:%zu,l:%zu,lastPivotLine:%zu,currentColumn:%zu\n\t%F = %F - (%F * %F)",i,l,lastPivotLine,currentColumn,A[i][l],A[i][l],A[lastPivotLine][l],tmp);
+                #endif // DEBUG
                 A[i][l] = A[i][l] - (A[lastPivotLine][l]*tmp);
+                #if DEBUG
                 printf(" = %F",A[i][l]);
+                #endif // DEBUG
             }
         }
     }
@@ -814,7 +827,7 @@ void manualPivoting(const size_t n, const size_t m, double A[n][m], const double
 }
 
 // invert the matrix A and put the result in Ainv
-void gaussJordanInversion(const size_t n, const size_t m, const double A[n][m], double Ainv[n][m], const short int isFpanr, const enum PIVOT_STRATEGY strategy) {
+void gaussJordanInversion(const size_t n, const size_t m, const double A[n][m], double Ainv[n][m], const short int isFpanr, const enum PIVOT_STRATEGY strategy, const enum INDICATEUR_ENUM indicateur, const int precision) {
     const size_t height = m+m;
     // adding identity matrix to the end
     double (*B)[n][height];
@@ -825,9 +838,9 @@ void gaussJordanInversion(const size_t n, const size_t m, const double A[n][m], 
                 (*B)[i][j] = A[i][j];
             } else {
                 if(i==j-m) {
-                    (*B)[i][j] = isFpanr?doubleToFpanrWithPrec(1.0,10):1.0; //FPANR_ONE;
+                    (*B)[i][j] = CPREC(1.0); //FPANR_ONE;
                 } else {
-                    (*B)[i][j] = FPANR_ZERO;
+                    (*B)[i][j] = CPREC(0.0);
                 }
             }
         }
@@ -838,7 +851,7 @@ void gaussJordanInversion(const size_t n, const size_t m, const double A[n][m], 
     printf("\nfirst B:\n");
     matrix_print_fpanr(n,height,*B);
     #endif // DEBUG
-    int r = gaussJordanPivot(n, height, *B, isFpanr, strategy);
+    int r = gaussJordanPivot(n, height, *B, isFpanr, strategy, indicateur, precision);
     if ( r == 0 ) {
         fprintf(stderr, "\n***********\nDidn't pivot at all....\n***********\n");
     }

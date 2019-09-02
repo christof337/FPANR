@@ -19,6 +19,13 @@ double myAbs(const double a) {
 	return res._value;
 }
 
+double myLog(const double a) {
+	double_st res, val;
+	val._value = a;
+	d_log(&res, val);
+	return res._value;
+}
+
 // ---------------------------------------------------------------------------------------
 // 
 // ARRAYS
@@ -274,6 +281,19 @@ void array_fill_fpanr (const size_t x, double array[x])
 }
 
 /**
+ * Fills an array with 0 FPANR way at a given precision
+ * @param x
+ * @param array
+ */
+void array_fill_fpanr_with_prec (const size_t x, double array[x], const int precision)
+{
+	for(size_t i=0; i<x; ++i)
+	{
+		array[i] = dtfpwp(0.0, precision);
+	}
+}
+
+/**
  * Fills an array with each a_{i} being equal to e^{i/3} fpanr way
  * Mostly used to fill an array with values.
  * @param x size of the array
@@ -344,6 +364,24 @@ void matrix_fill_fpanr (const size_t x, const size_t y, double matrix[x][y])
 }
 
 /**
+ * Fills a matrix with 0 fpanr way at a given precision
+ * https://stackoverflow.com/questions/42094465/correctly-allocating-multi-dimensional-arrays
+ * @param x
+ * @param y
+ * @param matrix
+ */
+void matrix_fill_fpanr_with_prec (const size_t x, const size_t y, double matrix[x][y], const int precision)
+{
+	for(size_t i=0; i<x; ++i)
+	{
+		for(size_t j=0; j<y; ++j)
+		{
+			matrix[i][j] = dtfpwp(0.0,precision);
+		}
+	}
+}
+
+/**
  * Fills a permutation matrix with 1 on the diagonal and 0 elsewhere fpanr way
  * https://stackoverflow.com/questions/42094465/correctly-allocating-multi-dimensional-arrays
  * @param x
@@ -360,6 +398,29 @@ void permutation_matrix_fill_fpanr (const size_t x, const size_t y, double matri
 				matrix[i][j] = dtfp(1.0);
 			} else {
 				matrix[i][j] = dtfp(0.0);
+			}
+		}
+	}
+}
+
+
+/**
+ * Fills a permutation matrix with 1 on the diagonal and 0 elsewhere fpanr way
+ * https://stackoverflow.com/questions/42094465/correctly-allocating-multi-dimensional-arrays
+ * @param x
+ * @param y
+ * @param matrix
+ */
+void permutation_matrix_fill_fpanr_with_prec (const size_t x, const size_t y, double matrix[x][y], const int precision)
+{
+	for(size_t i=0; i<x; ++i)
+	{
+		for(size_t j=0; j<y; ++j)
+		{
+			if ( i == j ) {
+				matrix[i][j] = dtfpwp(1.0,precision);
+			} else {
+				matrix[i][j] = dtfpwp(0.0,precision);
 			}
 		}
 	}
@@ -415,7 +476,6 @@ void fill_fig2_fpanr(double matrix[3][3]) {
 	matrix[2][2] = doubleToFpanrWithPrec(9.6,ref-3);
 }
 
-
 /**
  * Multiply the matrix A with B and put the result in result fpanrway.
  * @param n number of lines of A
@@ -444,10 +504,8 @@ void matrix_mult_fpanr(const size_t n, const size_t m, const size_t p, double (*
  * @param matrix the matrix to print
  */
 void matrix_print_fpanr (const size_t x, const size_t y, const double matrix[x][y]) {
-	for(size_t i=0; i<x; ++i)
-	{
-		for(size_t j=0; j<y; ++j)
-		{
+	for(size_t i=0; i<x; ++i) {
+		for(size_t j=0; j<y; ++j) {
 			// printf("\nbefore %zu,%zu",i,j);
 			// fflush(stdout);
 			// printf(": %F : ",matrix[i][j]);
@@ -464,7 +522,6 @@ void matrix_print_fpanr (const size_t x, const size_t y, const double matrix[x][
 /*
  * Perturbate a matrix to the `perturbation`'th stage
  */
-
 void perturbateMatrix_fpanr(const size_t n, const size_t m, double A[n][n], const int perturbationStage) {
 	double val;
 	int sign;
@@ -474,7 +531,7 @@ void perturbateMatrix_fpanr(const size_t n, const size_t m, double A[n][n], cons
 		for ( size_t j = 0 ; j < m ; ++j ) {
 			sign = getRandomValue(DEFAULT_RANDOM_RANGE); // 0 or 1
 			val = dtfp(2*sign - 1) ; // -1 or 1
-			A[i][j] += (val * perturbation);
+			A[i][j] = A[i][j] + (val * perturbation);
 		}
 	}
 }
@@ -486,8 +543,7 @@ void perturbateMatrix_fpanr(const size_t n, const size_t m, double A[n][n], cons
 /**
  * append a char to the end of a string
  */
-void append(char* s, const char c)
-{
+void append(char* s, const char c) {
 	int len = strlen(s);
 	s[len] = c;
 	s[len+1] = '\0';
