@@ -111,6 +111,8 @@ int main(int argc, char *argv[]) {
                         matrix = MAT_2;
                     } else if (strcmp(argv[4], "0") == 0 ) {
                         matrix = MAT_1;
+                    } else {
+                        matrix = MAT_HILBERT;
                     }
                     if ( argc >= 6 ) {
                         // indicateur
@@ -180,7 +182,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-#define USE_DIFF 1
+#define USE_DIFF 0
 // throughout this function, if nb_matrix==1 then the indicator is low_prec
 void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, int nb_matrix, const int isFpanr, const enum INVERSION_ALGORITHM algorithm) {
     char fileName[100];
@@ -210,7 +212,7 @@ void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, int nb_mat
     strcat(fileName,".fpanr");
     fpanrFileToDMat(n, n, matrixRef, fileName);
     //getMatrixFromFile(n,matrixRef,fileName);
-    nb_matrix = nb_matrix==1?MAX_PREC:nb_matrix;
+    nb_matrix = nb_matrix==1?MAX_PREC:(USE_DIFF?nb_matrix:1);
     for ( size_t indMat = nb_matrix==MAX_PREC?MIN_PREC:0 ; indMat < nb_matrix ; ++indMat ) {
         moydist = FPANR_ZERO;
         tmp = buildFileName(OM_A_INV, n, nb_matrix==1?-2:indMat, strategy, algorithm);
@@ -242,7 +244,10 @@ void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, int nb_mat
                     }
 
                    // printf(" (after abs %d)",getPrecFromFpanrDouble(absA));
-                    prec = MAX_PREC-getPrecFromFpanrDouble(absA);
+                    if ( USE_DIFF )
+                        prec = MAX_PREC-getPrecFromFpanrDouble(absA);
+                    else
+                        prec = getPrecFromFpanrDouble(absA);
                     assert(prec<=MAX_PREC && prec >= 0);
                     //prec = getPrecFromFpanrDouble(absA);
                     arrayPrec[prec] = arrayPrec[prec] + 1;
