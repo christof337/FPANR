@@ -49,8 +49,11 @@ void matrix_fill_fpanr_with_prec (const size_t x, const size_t y, double matrix[
 void permutation_matrix_fill_fpanr (const size_t x, const size_t y, double matrix[x][y]);
 void permutation_matrix_fill_fpanr_with_prec (const size_t x, const size_t y, double matrix[x][y], const int precision);
 void hilbert_fpanr(const size_t x, const size_t y, double matrix[x][y]) ;
+void hilbert_fpanr_with_prec(const size_t x, const size_t y, double matrix[x][y], const int precision) ;
 void fill_fig1_fpanr(double matrix[3][3]);
 void fill_fig2_fpanr(double matrix[3][3]);
+void fill_fig1_fpanr_with_prec(double matrix[3][3], const int precision);
+void fill_fig2_fpanr_with_prec(double matrix[3][3], const int precision);
 void matrix_mult_fpanr(const size_t n, const size_t m, const size_t p, double (**result)[n][p], const double A[n][m], const double B[m][p]);
 void matrix_print_fpanr (const size_t x, const size_t y, const double matrix[x][y]);
 void perturbateMatrix_fpanr(const size_t n, const size_t m, double A[n][n], const int perturbation);
@@ -58,6 +61,6 @@ void perturbateMatrix_fpanr(const size_t n, const size_t m, double A[n][n], cons
 // miscellaneous
 void append(char* s, const char c);
 int getRandomValue(const int range);
-int isInZu(size_t n, size_t S[n][2], int i, int j);
+int isInZu(const size_t n, const size_t S[n][2], const int i, const int j);
 
 #endif // UTILS_H

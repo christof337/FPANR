@@ -61,8 +61,12 @@ gcc utils.c LUFacto.c hungarian.c main.c -o LUFacto -lm -lfpanrio
 */
 
 #define DEFAULT_MATRIX_SIZE 4
+#define MIN_PREC 16
+#define MAX_PREC 51
 
-void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int nb_matrix, const int isFpanr, const enum INVERSION_ALGORITHM algorithm) ;
+// #define DEBUG
+
+void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, int nb_matrix, const int isFpanr, const enum INVERSION_ALGORITHM algorithm) ;
 
 int main(int argc, char *argv[]) {
     /*double a,b;
@@ -131,6 +135,9 @@ int main(int argc, char *argv[]) {
 
     // iterating through enum strategies
     for (int strategy = PS_MAX_MAG_NOT_IN_S; strategy <= PS_MAX_PRECISION ; ++strategy ) {
+        #ifdef DEBUG
+        if(strategy == PS_MAX_MAG_NOT_IN_S) {
+        #endif
         if ( strategy != PS_MAX_PRECISION || isFpanr ) {
             if (indicateur == IE_PERTURBED) {
                 // 8 matrix need to be computed with perturbations
@@ -138,13 +145,18 @@ int main(int argc, char *argv[]) {
                     computeMatrix(n, isFpanr, i, strategy, algorithm, matrix,indicateur,PREC_MAX_DOUBLE);
                 }
             } else if (indicateur == IE_LOW_PREC) {
-                printf("\nMATRIX LOW PREC");
-                computeMatrix(n, isFpanr, -2, strategy, algorithm, matrix,indicateur,DEFAULT_LOW_PRECISION);
+                for ( short int i = MIN_PREC ; i < MAX_PREC ; ++i ) {
+                    printf("\nMATRIX LOW PREC");
+                    computeMatrix(n, isFpanr, -2, strategy, algorithm, matrix,indicateur,i);
+                }
             }
                 printf("\nMATRIX REF");
             // 1 "clear" is computed as reference
             computeMatrix(n, isFpanr, -1, strategy, algorithm, matrix, indicateur,PREC_MAX_DOUBLE);
         }
+        #ifdef DEBUG
+        }
+        #endif
     }
 
     // up to here, files have been generated
@@ -168,14 +180,15 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-#define MAX_PREC 51
 #define USE_DIFF 1
-void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int nb_matrix, const int isFpanr, const enum INVERSION_ALGORITHM algorithm) {
+// throughout this function, if nb_matrix==1 then the indicator is low_prec
+void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, int nb_matrix, const int isFpanr, const enum INVERSION_ALGORITHM algorithm) {
     char fileName[100];
     char * tmp;
     int prec;
     double val, absA;
     double moydist=FPANR_ZERO;
+    double moyDistArray[MAX_PREC-MIN_PREC+1];
     double matrixRef[n][n], perturbedMatrix[n][n]; // it will be used for comparison THROUGHOUT the rest of this function
     printf("\nmineprec\n");
     // on commence par déclarer le tableau qui contiendra les précisions
@@ -197,17 +210,19 @@ void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int 
     strcat(fileName,".fpanr");
     fpanrFileToDMat(n, n, matrixRef, fileName);
     //getMatrixFromFile(n,matrixRef,fileName);
-    for ( size_t indMat = 0 ; indMat < nb_matrix ; ++indMat ) {
+    nb_matrix = nb_matrix==1?MAX_PREC:nb_matrix;
+    for ( size_t indMat = nb_matrix==MAX_PREC?MIN_PREC:0 ; indMat < nb_matrix ; ++indMat ) {
+        moydist = FPANR_ZERO;
         tmp = buildFileName(OM_A_INV, n, nb_matrix==1?-2:indMat, strategy, algorithm);
         assert(tmp != NULL);
         strcpy(fileName, tmp);
         strcat(fileName,".fpanr");
         fpanrFileToDMat(n, n, perturbedMatrix, fileName);
-        printf("filename : %s",fileName);
+        // printf("filename : %s",fileName);
 
         for ( size_t i = 0 ; i < n ; ++i ) {
             for ( size_t j = 0 ; j < n ; ++j ) {
-                if(nb_matrix == 1) {
+                if(nb_matrix == MAX_PREC) {
                     if ( cmpFpanrDouble(matrixRef[i][j], dtfp(0.0)) != 0 ) {
                         // printf("\np:(%F-%F)/%F=%F",matrixRef[i][j],perturbedMatrix[i][j],matrixRef[i][j],myAbs((matrixRef[i][j] - perturbedMatrix[i][j])/matrixRef[i][j]));
                         moydist += myAbs((matrixRef[i][j] - perturbedMatrix[i][j])/matrixRef[i][j]);
@@ -235,14 +250,17 @@ void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int 
             }
         }
         free(tmp);
+        if(nb_matrix == MAX_PREC) {
+            moydist /= (n*n);
+            char * chaine = fpanrDoubleToStr(moydist);
+            assert(chaine != NULL);
+            printf("\nMEAN DISTANCE for prec %zu : %s",indMat, chaine);
+            free(chaine);
+            moyDistArray[indMat-MIN_PREC] = moydist;
+        }
     }
-    if(nb_matrix == 1) {
-        moydist /= (n*n);
-        char * chaine = fpanrDoubleToStr(moydist);
-        assert(chaine != NULL);
-        printf("\nMEAN DISTANCE : %s",chaine);
-        free(chaine);
-    } else {
+    if(nb_matrix != MAX_PREC) {
+        // perturbed
         for ( size_t k = 0 ; k < MAX_PREC ; ++k ) {
             printf("\n[%zu]:%d\t",k,arrayPrec[k]);
             for ( int m = 0 ; m < arrayPrec[k] ; ++m) {
@@ -265,10 +283,27 @@ void mineStrategy(const size_t n, const enum PIVOT_STRATEGY strategy, const int 
             }
             fclose(fp);
         }
-
-        free(tmp);
+    } else {
+        // low prec
+        FILE * fp;
+        tmp = buildFileName(OM_DIST, n, -2, strategy, algorithm);
+        assert(tmp != NULL);
+        strcpy(fileName, tmp);
+        // fpanrDVecToFile(MAX_PREC-MIN_PREC, moyDistArray, fileName);
+        fp = fopen(fileName, "w");
+        assert(fp != NULL);
+        printf("\nWriting mean distance to file '%s'",fileName);
+        for( size_t k = MIN_PREC ; k < nb_matrix ; ++k ) {
+            char * chaine = fpanrDoubleToStr(moyDistArray[k-MIN_PREC]);
+            assert(chaine != NULL);
+            fprintf(fp,"%zu\t%s\n",k,chaine);
+            free(chaine);
+        }
+        fclose(fp);
     }
 
+
+    free(tmp);
     free(arrayPrec);
 
     //printf("mining %d %d %d",strategy, nb_matrix, isFpanr);

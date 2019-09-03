@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #define MIN(A,B) A<B?A:B
+#define MAX(A,B) A>B?A:B
 #define CPREC(a) indicateur==IE_LOW_PREC?dtfpwp(a,precision):(isFpanr?dtfp(a):a)
 
 enum INDICATEUR_ENUM { IE_PERTURBED=0, IE_LOW_PREC};

@@ -427,18 +427,33 @@ void permutation_matrix_fill_fpanr_with_prec (const size_t x, const size_t y, do
 }
 
 /**
- * Fills a matrix using hilbert's method
+ * Fills a matrix using hilbert's method fpanrway
  * @param x number of lines
  * @param y number of columns
  * @param matrix the matrix to fill in respect to Hilbert
  */
 void hilbert_fpanr(const size_t x, const size_t y, double matrix[x][y]) {
-	for(size_t i=x; i>0; --i) {
-		for(size_t j=y; j>0; --j) {
+	for(int i=x; i>0; --i) {
+		for(int j=y; j>0; --j) {
 			matrix[i-1][j-1] = dtfp(1.0)/dtfp((x-i+1)+(y-j+1));
 		}
 	}
 }
+
+/**
+ * Fills a matrix using hilbert's method fpanr way at given precision
+ * @param x number of lines
+ * @param y number of columns
+ * @param matrix the matrix to fill in respect to Hilbert
+ */
+void hilbert_fpanr_with_prec(const size_t x, const size_t y, double matrix[x][y], const int precision) {
+	for(int i=x; i>0; --i) {
+		for(int j=y; j>0; --j) {
+			matrix[i-1][j-1] = dtfpwp(1.0,precision)/dtfpwp((x-i+1)+(y-j+1),precision);
+		}
+	}
+}
+
 /*
 for(size_t i=0; i<x; ++i)
 {
@@ -450,31 +465,42 @@ for(size_t i=0; i<x; ++i)
 */
 
 void fill_fig1_fpanr(double matrix[3][3]) {
-	int ref = 51;
-	matrix[0][0] = doubleToFpanrWithPrec(3000.0,ref-15);
-	matrix[0][1] = doubleToFpanrWithPrec(1200.0,ref-3);
-	matrix[0][2] = doubleToFpanrWithPrec(330.0,ref-6);
-	matrix[1][0] = doubleToFpanrWithPrec(100.0,ref-3);
-	matrix[1][1] = doubleToFpanrWithPrec(9.0,ref-3);
-	matrix[1][2] = doubleToFpanrWithPrec(900.0,ref-3);
-	matrix[2][0] = doubleToFpanrWithPrec(1500.0,ref-2);
-	matrix[2][1] = doubleToFpanrWithPrec(0.1,ref-4);
-	matrix[2][2] = doubleToFpanrWithPrec(0.55,ref-5);
+	fill_fig1_fpanr_with_prec(matrix, 51);
 }
 
 
 void fill_fig2_fpanr(double matrix[3][3]) {
-	int ref = 51;
-	matrix[0][0] = doubleToFpanrWithPrec(25.0,ref-15);
-	matrix[0][1] = doubleToFpanrWithPrec(3.3,ref-3);
-	matrix[0][2] = doubleToFpanrWithPrec(2.0,ref-5);
-	matrix[1][0] = doubleToFpanrWithPrec(6.0,ref-4);
-	matrix[1][1] = doubleToFpanrWithPrec(1.6,ref-4);
-	matrix[1][2] = doubleToFpanrWithPrec(3.86,ref-5);
-	matrix[2][0] = doubleToFpanrWithPrec(0.82,ref-4);
-	matrix[2][1] = doubleToFpanrWithPrec(4.0,ref-4);
-	matrix[2][2] = doubleToFpanrWithPrec(9.6,ref-3);
+	fill_fig2_fpanr_with_prec(matrix, 51);
 }
+
+
+void fill_fig1_fpanr_with_prec(double matrix[3][3], const int precision) {
+	int ref = 51;
+	matrix[0][0] = doubleToFpanrWithPrec(3000.0,precision-15);
+	matrix[0][1] = doubleToFpanrWithPrec(1200.0,precision-3);
+	matrix[0][2] = doubleToFpanrWithPrec(330.0,precision-6);
+	matrix[1][0] = doubleToFpanrWithPrec(100.0,precision-3);
+	matrix[1][1] = doubleToFpanrWithPrec(9.0,precision-3);
+	matrix[1][2] = doubleToFpanrWithPrec(900.0,precision-3);
+	matrix[2][0] = doubleToFpanrWithPrec(1500.0,precision-2);
+	matrix[2][1] = doubleToFpanrWithPrec(0.1,precision-4);
+	matrix[2][2] = doubleToFpanrWithPrec(0.55,precision-5);
+}
+
+
+void fill_fig2_fpanr_with_prec(double matrix[3][3], const int precision) {
+	int ref = 51;
+	matrix[0][0] = doubleToFpanrWithPrec(25.0,precision-15);
+	matrix[0][1] = doubleToFpanrWithPrec(3.3,precision-3);
+	matrix[0][2] = doubleToFpanrWithPrec(2.0,precision-5);
+	matrix[1][0] = doubleToFpanrWithPrec(6.0,precision-4);
+	matrix[1][1] = doubleToFpanrWithPrec(1.6,precision-4);
+	matrix[1][2] = doubleToFpanrWithPrec(3.86,precision-5);
+	matrix[2][0] = doubleToFpanrWithPrec(0.82,precision-4);
+	matrix[2][1] = doubleToFpanrWithPrec(4.0,precision-4);
+	matrix[2][2] = doubleToFpanrWithPrec(9.6,precision-3);
+}
+
 
 /**
  * Multiply the matrix A with B and put the result in result fpanrway.
@@ -563,7 +589,7 @@ int getRandomValue(const int range) {
 	return random() % range;
 }
 
-int isInZu(size_t n, size_t S[n][2], int i, int j) {
+int isInZu(const size_t n, const size_t S[n][2], const int i, const int j) {
 	for ( int k = 0 ; k < n ; ++k ) {
 		if(S[k][0] == i && S[k][1] == j ) {
 			return TRUE;

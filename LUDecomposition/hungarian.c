@@ -106,7 +106,7 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
       for ( i = 0 ; i < n ; ++i ) {
         for ( j = 0 ; j < m ; ++j ) {
           // consider a zero Z of the matrix
-          if (cmpFpanrDouble(matrix[i][j],CPREC(0.0)) == 0 ) {
+          if (cmpFpanrDouble(matrix[i][j],FPANR_ZERO) == 0 ) {
             // if there is no starred zero in its row
             isStarred = rowContainsTrue(n,m,i,starred);
             // and none in its column
@@ -177,7 +177,7 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
             // free(chaine);
             // choose a non-covered zero
           //  if (TO_FP(matrix[i][j]) == FPANR_ZERO && coveredRows[i] == FALSE && coveredColumns[j] == FALSE) {
-            if (cmpFpanrDouble(matrix[i][j], CPREC(0.0)) == 0 && coveredRows[i] == FALSE && coveredColumns[j] == FALSE) {
+            if (cmpFpanrDouble(matrix[i][j], FPANR_ZERO) == 0 && coveredRows[i] == FALSE && coveredColumns[j] == FALSE) {
             #ifdef DEBUG
               cusPrintA(n,coveredRows);
               cusPrintA(m,coveredColumns);
@@ -211,7 +211,7 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
           isCovered = TRUE;
           for ( i = 0 ; i < n && isCovered ; ++i ) {
             for (j = 0 ; j < m && isCovered ; ++j ) {
-              if ( cmpFpanrDouble(matrix[i][j], CPREC(0.0)) == 0 && coveredRows[i] == FALSE && coveredColumns[j] == FALSE) {
+              if ( cmpFpanrDouble(matrix[i][j], FPANR_ZERO) == 0 && coveredRows[i] == FALSE && coveredColumns[j] == FALSE) {
                 isCovered = FALSE;
               }
             }
@@ -333,7 +333,7 @@ int hungarian(const size_t n, const size_t m, double inputMat[n][m], size_t inde
         fflush(stdout);
         for ( i = 0 ; i < n ; ++i ) {
           for( j = 0 ; j < m ; ++j ) {
-            assert(cmpFpanrDouble(matrix[i][j], CPREC(0.0)) != 0 || (coveredRows[i] || coveredColumns[j]) 
+            assert(cmpFpanrDouble(matrix[i][j], FPANR_ZERO) != 0 || (coveredRows[i] || coveredColumns[j]) 
             /* "At this point, all the zeros of the matrix are covered"*/);
           }
         }
